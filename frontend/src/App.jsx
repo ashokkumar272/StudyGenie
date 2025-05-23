@@ -15,9 +15,9 @@ const App = () => {
     <AuthProvider>
       <ChatProvider>
         <Router>
-          <div className="flex flex-col min-h-screen">
+          <div className="flex flex-col h-screen overflow-hidden">
             <Navbar />
-            <main className="flex-grow pt-16">
+            <main className="flex-grow pt-16 overflow-hidden">
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />

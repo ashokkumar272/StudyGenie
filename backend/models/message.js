@@ -6,6 +6,10 @@ const MessageSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    chatSessionId: {
+        type: String,
+        required: true
+    },
     role: {
         type: String,
         enum: ['user', 'assistant'],
