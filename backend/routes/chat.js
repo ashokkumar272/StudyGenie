@@ -198,10 +198,105 @@ router.delete('/session/:sessionId', authMiddleware, async (req, res) => {
     
     await Message.deleteMany({ userId, chatSessionId: sessionId });
     
-    res.json({ message: 'Chat session deleted successfully' });
-  } catch (error) {
+    res.json({ message: 'Chat session deleted successfully' });  } catch (error) {
     console.error('Delete session error:', error.message);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   POST /api/chat/followup
+// @desc    Process follow-up question based on selected text
+// @access  Private
+router.post('/followup', authMiddleware, async (req, res) => {
+  try {
+    const { selectedText, originalAssistantMessage, userFollowupQuestion, chatSessionId } = req.body;
+    const userId = req.user.id;
+
+    if (!selectedText || !originalAssistantMessage || !userFollowupQuestion) {
+      return res.status(400).json({ message: 'Missing required information for follow-up' });
+    }
+
+    // Get the last 10 messages for this chat session for context
+    const messageHistory = await Message.find({ userId, chatSessionId })
+      .sort({ timestamp: -1 })
+      .limit(10)
+      .sort({ timestamp: 1 });
+
+    // Format messages for Gemini API
+    const formattedMessages = messageHistory.map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.content }]
+    }));
+
+    // Add the system prompt as the first message if not present
+    if (formattedMessages.length === 0 || formattedMessages[0].role !== 'model') {
+      formattedMessages.unshift({
+        role: 'model',
+        parts: [{ text: 'You are a helpful assistant.' }]
+      });
+    }
+
+    // Add the original assistant message and the follow-up question with selected text
+    formattedMessages.push({
+      role: 'user',
+      parts: [{ text: `Regarding this part of your previous response: "${selectedText}", ${userFollowupQuestion}` }]
+    });
+
+    // Call Gemini API
+    const response = await axios.post(
+      process.env.GEMINI_API_URL,
+      {
+        contents: formattedMessages,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 800,
+        }
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        params: {
+          key: process.env.GEMINI_API_KEY
+        }
+      }
+    );
+
+    // Extract response from Gemini API
+    const assistantResponse = response.data.candidates[0].content.parts[0].text;
+
+    // Save the follow-up question to DB
+    const userMessage = new Message({
+      userId,
+      chatSessionId,
+      role: 'user',
+      content: `Regarding: "${selectedText}" - ${userFollowupQuestion}`,
+      selectedText,
+      fullAssistantMessage: originalAssistantMessage,
+    });
+    await userMessage.save();
+
+    // Save the assistant response to DB
+    const assistantMessage = new Message({
+      userId,
+      chatSessionId,
+      role: 'assistant',
+      content: assistantResponse || 'Sorry, I could not generate a response. Please try again.',
+      replyToMessageId: userMessage._id
+    });
+    await assistantMessage.save();
+
+    res.json({
+      message: assistantResponse,
+      messageId: assistantMessage._id,
+      chatSessionId
+    });
+  } catch (error) {
+    console.error('Follow-up error:', error.message);
+    if (error.response) {
+      console.error('Gemini API error:', error.response.data);
+    }
+    res.status(500).json({ message: 'Server error processing follow-up question' });
   }
 });
 

@@ -211,7 +211,9 @@ export const ChatProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };// Start a new chat session
+  };
+
+  // Start a new chat session
   const startNewSession = () => {
     try {
       const newSessionId = Date.now().toString();
@@ -236,6 +238,92 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
+  // Send follow-up question based on selected text
+  const sendFollowupQuestion = async ({ selectedText, originalAssistantMessage, userFollowupQuestion }) => {
+    try {
+      // Validate content
+      if (!selectedText || !originalAssistantMessage || !userFollowupQuestion.trim()) {
+        setError('Missing information for follow-up question');
+        return false;
+      }
+      
+      setLoading(true);
+      
+      // Use current session or create a new one
+      const sessionId = currentSessionId || Date.now().toString();
+      
+      if (!currentSessionId) {
+        setCurrentSessionId(sessionId);
+      }
+      
+      // Optimistically update UI with user follow-up message
+      const formattedQuestion = `Regarding: "${selectedText}" - ${userFollowupQuestion}`;
+      const userMessageId = Date.now().toString();
+      const userMessage = {
+        _id: userMessageId,
+        role: 'user',
+        content: formattedQuestion,
+        chatSessionId: sessionId,
+        timestamp: new Date().toISOString(),
+        selectedText,
+        fullAssistantMessage: originalAssistantMessage
+      };
+      
+      setMessages((prev) => [...prev, userMessage]);
+      
+      try {
+        // Send to API
+        const res = await axios.post('/api/chat/followup', { 
+          selectedText, 
+          originalAssistantMessage, 
+          userFollowupQuestion,
+          chatSessionId: sessionId 
+        });
+        
+        if (!res.data || !res.data.message) {
+          throw new Error('Invalid response from server');
+        }
+        
+        // Add AI response to messages
+        const aiMessage = {
+          _id: res.data.messageId || Date.now().toString() + '-ai',
+          role: 'assistant',
+          content: res.data.message,
+          chatSessionId: sessionId,
+          timestamp: new Date().toISOString(),
+          replyToMessageId: userMessageId
+        };
+        
+        setMessages((prev) => [...prev, aiMessage]);
+        
+        // Refresh chat sessions list
+        fetchChatSessions();
+      } catch (apiError) {
+        // If API call fails, add error message
+        setMessages((prev) => [
+          ...prev, 
+          {
+            _id: Date.now().toString() + '-error',
+            role: 'assistant',
+            content: 'Sorry, I encountered an error processing your question. Please try again.',
+            chatSessionId: sessionId,
+            timestamp: new Date().toISOString(),
+            replyToMessageId: userMessageId
+          }
+        ]);
+        throw apiError;
+      }
+      
+      return true;
+    } catch (err) {
+      console.error('Send follow-up message error:', err);
+      setError('Failed to send follow-up message');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Clear error
   const clearError = () => {
     setError(null);
@@ -249,6 +337,7 @@ export const ChatProvider = ({ children }) => {
         chatSessions,
         currentSessionId,
         sendMessage,
+        sendFollowupQuestion,
         clearChatHistory,
         clearError,
         fetchSessionMessages,

@@ -22,6 +22,20 @@ const MessageSchema = new mongoose.Schema({
     timestamp: {
         type: Date,
         default: Date.now
+    },
+    // Fields for the "Ask About This" feature
+    fullAssistantMessage: {
+        type: String,
+        default: null
+    },
+    selectedText: {
+        type: String,
+        default: null
+    },
+    replyToMessageId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Message',
+        default: null
     }
 });
 
