@@ -98,16 +98,44 @@ export const ChatProvider = ({ children }) => {
       console.error('Fetch side threads error:', err);
       setSideThreads([]);
     }
+  };  // Simple hash function to match backend
+  const simpleHash = (str) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(16).substring(0, 8);
   };
 
-  // Fetch messages for a specific side thread
-  const fetchSideThreadMessages = async (mainThreadId, linkedToMessageId) => {
+  // Fetch messages for a specific side thread with optional selected text hash
+  const fetchSideThreadMessages = async (mainThreadId, linkedToMessageId, selectedText = null) => {
     try {
-      const res = await axios.get(`/api/chat/side-thread/${mainThreadId}/${linkedToMessageId}`);
+      let url = `/api/chat/side-thread/${mainThreadId}/${linkedToMessageId}`;
+      
+      // If selectedText is provided, generate hash and append to URL
+      if (selectedText) {
+        const hash = simpleHash(selectedText);
+        url += `/${hash}`;
+      }
+      
+      const res = await axios.get(url);
       return res.data || [];
     } catch (err) {
       console.error('Fetch side thread messages error:', err);
       throw err;
+    }
+  };
+
+  // Fetch all unique text selections that have side threads for a specific message
+  const fetchSideThreadSelections = async (mainThreadId, linkedToMessageId) => {
+    try {
+      const res = await axios.get(`/api/chat/side-thread-selections/${mainThreadId}/${linkedToMessageId}`);
+      return res.data || [];
+    } catch (err) {
+      console.error('Fetch side thread selections error:', err);
+      return [];
     }
   };
 
@@ -358,8 +386,7 @@ export const ChatProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
-  // Send side thread message
+  };  // Send side thread message
   const sendSideThreadMessage = async ({ mainThreadId, linkedToMessageId, selectedText, userQuery }) => {
     try {
       if (!mainThreadId || !linkedToMessageId || !selectedText || !userQuery.trim()) {
@@ -391,11 +418,10 @@ export const ChatProvider = ({ children }) => {
       throw err;
     }
   };
-
   // Clear error
   const clearError = () => {
     setError(null);
-  };  return (
+  };return (
     <ChatContext.Provider
       value={{
         messages,
@@ -404,10 +430,10 @@ export const ChatProvider = ({ children }) => {
         chatSessions,
         currentSessionId,
         sideThreads,
-        sendMessage,
-        sendFollowupQuestion,
+        sendMessage,        sendFollowupQuestion,
         sendSideThreadMessage,
         fetchSideThreadMessages,
+        fetchSideThreadSelections,
         clearChatHistory,
         clearError,
         fetchSessionMessages,

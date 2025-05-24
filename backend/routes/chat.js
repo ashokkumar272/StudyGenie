@@ -335,22 +335,30 @@ router.post('/side-thread', authMiddleware, async (req, res) => {
     })
     .sort({ timestamp: -1 })
     .limit(10)
-    .sort({ timestamp: 1 });
-
-    // Get existing side thread messages
+    .sort({ timestamp: 1 });    // Get existing side thread messages for this specific selected text
     const sideThreadMessages = await Message.find({
       userId,
       mainThreadId,
       linkedToMessageId,
-      chatType: 'side'
-    }).sort({ timestamp: 1 });
+      chatType: 'side',
+      selectedText: selectedText // Filter by the specific selected text
+    }).sort({ timestamp: 1 });    // Simple hash function to match frontend
+    const simpleHash = (str) => {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+      }
+      return Math.abs(hash).toString(16).substring(0, 8);
+    };
 
-    // Generate unique side thread ID if this is the first message
+    // Generate unique side thread ID based on parent message and selected text hash
+    // This allows multiple side threads per parent message for different text selections
+    const selectedTextHash = simpleHash(selectedText);
     const sideThreadId = sideThreadMessages.length > 0 
       ? sideThreadMessages[0].chatSessionId 
-      : `side_${Date.now()}_${linkedToMessageId}`;
-
-    // Save user question
+      : `side_${linkedToMessageId}_${selectedTextHash}_${Date.now()}`;// Save user question with selected text for unique identification
     const userMessage = new Message({
       userId,
       chatSessionId: sideThreadId,
@@ -359,7 +367,7 @@ router.post('/side-thread', authMiddleware, async (req, res) => {
       chatType: 'side',
       mainThreadId,
       linkedToMessageId,
-      selectedText: sideThreadMessages.length === 0 ? selectedText : null // Only store on first message
+      selectedText: selectedText // Always store selected text for identification
     });
     await userMessage.save();
 
@@ -412,9 +420,7 @@ router.post('/side-thread', authMiddleware, async (req, res) => {
       }
     );
 
-    const assistantResponse = response.data.candidates[0].content.parts[0].text;
-
-    // Save assistant response
+    const assistantResponse = response.data.candidates[0].content.parts[0].text;    // Save assistant response with selected text for identification
     const assistantMessage = new Message({
       userId,
       chatSessionId: sideThreadId,
@@ -423,6 +429,7 @@ router.post('/side-thread', authMiddleware, async (req, res) => {
       chatType: 'side',
       mainThreadId,
       linkedToMessageId,
+      selectedText: selectedText, // Store selected text for identification
       parentMessageId: userMessage._id
     });
     await assistantMessage.save();
@@ -442,24 +449,97 @@ router.post('/side-thread', authMiddleware, async (req, res) => {
   }
 });
 
-// @route   GET /api/chat/side-thread/:mainThreadId/:linkedToMessageId
-// @desc    Get side thread messages for a specific linked message
+// @route   GET /api/chat/side-thread/:mainThreadId/:linkedToMessageId/:selectedTextHash?
+// @desc    Get side thread messages for a specific linked message and optionally specific selected text
 // @access  Private
-router.get('/side-thread/:mainThreadId/:linkedToMessageId', authMiddleware, async (req, res) => {
+router.get('/side-thread/:mainThreadId/:linkedToMessageId/:selectedTextHash?', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
-    const { mainThreadId, linkedToMessageId } = req.params;
+    const { mainThreadId, linkedToMessageId, selectedTextHash } = req.params;
     
-    const sideMessages = await Message.find({
+    let query = {
       userId,
       mainThreadId,
       linkedToMessageId,
       chatType: 'side'
-    }).sort({ timestamp: 1 });
+    };    // If selectedTextHash is provided, filter by it
+    if (selectedTextHash && selectedTextHash !== 'undefined') {
+      // Simple hash function to match frontend
+      const simpleHash = (str) => {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+          const char = str.charCodeAt(i);
+          hash = ((hash << 5) - hash) + char;
+          hash = hash & hash; // Convert to 32bit integer
+        }
+        return Math.abs(hash).toString(16).substring(0, 8);
+      };
+
+      // Find messages where the selectedText hash matches
+      const allSideMessages = await Message.find(query);
+      const filteredMessages = allSideMessages.filter(msg => {
+        if (!msg.selectedText) return false;
+        const hash = simpleHash(msg.selectedText);
+        return hash === selectedTextHash;
+      });
+      
+      return res.json(filteredMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)));
+    }
+    
+    // If no hash provided, return all side threads for this message
+    const sideMessages = await Message.find(query).sort({ timestamp: 1 });
     
     res.json(sideMessages);
   } catch (error) {
     console.error('Get side thread error:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   GET /api/chat/side-thread-selections/:mainThreadId/:linkedToMessageId
+// @desc    Get all unique text selections that have side threads for a specific message
+// @access  Private
+router.get('/side-thread-selections/:mainThreadId/:linkedToMessageId', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { mainThreadId, linkedToMessageId } = req.params;
+    
+    // Get all unique selected texts for this message
+    const sideMessages = await Message.find({
+      userId,
+      mainThreadId,
+      linkedToMessageId,
+      chatType: 'side',
+      selectedText: { $ne: null, $ne: '' }
+    }).select('selectedText chatSessionId timestamp').sort({ timestamp: 1 });    // Group by selected text to get unique selections with their thread info
+    const uniqueSelections = {};
+    
+    // Simple hash function to match frontend
+    const simpleHash = (str) => {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+      }
+      return Math.abs(hash).toString(16).substring(0, 8);
+    };
+
+    sideMessages.forEach(msg => {
+      if (!uniqueSelections[msg.selectedText]) {
+        const hash = simpleHash(msg.selectedText);
+        uniqueSelections[msg.selectedText] = {
+          selectedText: msg.selectedText,
+          selectedTextHash: hash,
+          sideThreadId: msg.chatSessionId,
+          firstMessageTime: msg.timestamp
+        };
+      }
+    });
+    
+    res.json(Object.values(uniqueSelections));
+  } catch (error) {
+    console.error('Get side thread selections error:', error.message);
     res.status(500).json({ message: 'Server error' });
   }
 });

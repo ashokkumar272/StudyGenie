@@ -5,7 +5,7 @@ import { ChatContext } from '../context/chatContext';
 import '../assets/askAboutThis.css';
 
 const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false }, ref) => {
-  const { currentSessionId, sendSideThreadMessage, fetchSideThreadMessages } = useContext(ChatContext);
+  const { currentSessionId, sendSideThreadMessage, fetchSideThreadMessages, fetchSideThreadSelections } = useContext(ChatContext);
   const [selection, setSelection] = useState(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [showButton, setShowButton] = useState(false);
@@ -14,11 +14,24 @@ const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false }, ref) => {
   const [followupQuestion, setFollowupQuestion] = useState('');
   const [panelMessages, setPanelMessages] = useState([]);
   const [sideThreadId, setSideThreadId] = useState(null);
+  const [sideThreadSelections, setSideThreadSelections] = useState([]); // All selections for current parent
+  const [currentSelectionHash, setCurrentSelectionHash] = useState(null);
+  const [showSelectionList, setShowSelectionList] = useState(false);
   const modalRef = useRef(null);
   const buttonRef = useRef(null);
-  const savedSelection = useRef(null);
-  const messagesEndRef = useRef(null);
+  const savedSelection = useRef(null);  const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+
+  // Simple hash function to match backend
+  const simpleHash = (str) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(16).substring(0, 8);
+  };
 
   // Helper to save the current selection
   const saveSelection = () => {
@@ -105,21 +118,27 @@ const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false }, ref) => {
     
     // Always show the button first, regardless of mode
     setShowButton(true);
-  };
-  // Handle clicking the "Ask about this" button
+  };  // Handle clicking the "Ask about this" button
   const handleAskClick = async () => {
     setShowButton(false);
     
     if (isPanel) {
-      // Open the side panel and load existing messages if any
+      // Open the side panel and load existing selections/messages
       setIsPanelOpen(true);
       
       if (selection && currentSessionId) {
         try {
-          // Try to fetch existing side thread messages
-          const existingMessages = await fetchSideThreadMessages(currentSessionId, selection.messageId);
-          if (existingMessages.length > 0) {
-            // Convert backend messages to frontend format
+          // Fetch all existing selections for this parent message
+          const allSelections = await fetchSideThreadSelections(currentSessionId, selection.messageId);
+          setSideThreadSelections(allSelections);
+          
+          // Check if current selection already has a thread
+          const currentHash = simpleHash(selection.text);
+          const existingSelection = allSelections.find(s => s.selectedTextHash === currentHash);
+          
+          if (existingSelection) {
+            // Load existing thread for this specific selection
+            const existingMessages = await fetchSideThreadMessages(currentSessionId, selection.messageId, selection.text);
             const formattedMessages = existingMessages.map(msg => ({
               id: msg._id,
               role: msg.role,
@@ -128,15 +147,22 @@ const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false }, ref) => {
               isError: false
             }));
             setPanelMessages(formattedMessages);
-            setSideThreadId(existingMessages[0].chatSessionId);
+            setSideThreadId(existingSelection.sideThreadId);
+            setCurrentSelectionHash(currentHash);
+            setShowSelectionList(allSelections.length > 1);
           } else {
+            // New selection
             setPanelMessages([]);
             setSideThreadId(null);
+            setCurrentSelectionHash(currentHash);
+            setShowSelectionList(allSelections.length > 0);
           }
         } catch (error) {
-          console.error('Error loading existing side thread:', error);
+          console.error('Error loading side thread data:', error);
           setPanelMessages([]);
           setSideThreadId(null);
+          setSideThreadSelections([]);
+          setShowSelectionList(false);
         }
       }
     } else {
@@ -249,12 +275,43 @@ const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false }, ref) => {
       setShowModal(false);
       setFollowupQuestion('');
     }
-  };  // Close the panel
+  };  // Switch to a different text selection thread
+  const switchToSelection = async (selectionData) => {
+    try {
+      // Update current selection
+      setSelection({
+        text: selectionData.selectedText,
+        assistantMessage: selection.assistantMessage,
+        messageId: selection.messageId
+      });
+      setCurrentSelectionHash(selectionData.selectedTextHash);
+      
+      // Load messages for this specific selection
+      const existingMessages = await fetchSideThreadMessages(currentSessionId, selection.messageId, selectionData.selectedText);
+      const formattedMessages = existingMessages.map(msg => ({
+        id: msg._id,
+        role: msg.role,
+        content: msg.content,
+        timestamp: new Date(msg.timestamp),
+        isError: false
+      }));
+      
+      setPanelMessages(formattedMessages);
+      setSideThreadId(selectionData.sideThreadId);
+      
+    } catch (error) {
+      console.error('Error switching to selection:', error);
+    }  };
+
+  // Close the panel
   const closePanel = () => {
     setIsPanelOpen(false);
     setSelection(null);
     setFollowupQuestion('');
     setSideThreadId(null);
+    setSideThreadSelections([]);
+    setCurrentSelectionHash(null);
+    setShowSelectionList(false);
     // Keep panel messages so conversation is preserved if reopened
   };
   
@@ -263,7 +320,8 @@ const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false }, ref) => {
     setPanelMessages([]);
     setFollowupQuestion('');
     setSideThreadId(null);
-    // Keep the panel open
+    setCurrentSelectionHash(null);
+    // Keep the panel open and preserve selections list
   };
 
   // Handle textarea auto-resize
@@ -296,14 +354,29 @@ const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false }, ref) => {
     setFollowupQuestion(e.target.value);
     autoResizeTextarea();
   };
-
   // Method to open panel with existing thread (called from parent)
-  const openWithExistingThread = ({ messageId, content, selectedText, existingMessages, sideThreadId }) => {
+  const openWithExistingThread = async ({ messageId, content, selectedText, existingMessages, sideThreadId }) => {
     setSelection({
       text: selectedText || 'View conversation thread',
       assistantMessage: content,
       messageId: messageId
     });
+    
+    // Load all selections for this parent message
+    try {
+      const allSelections = await fetchSideThreadSelections(currentSessionId, messageId);
+      setSideThreadSelections(allSelections);
+      setShowSelectionList(allSelections.length > 1);
+      
+      if (selectedText) {
+        setCurrentSelectionHash(simpleHash(selectedText));
+      }
+    } catch (error) {
+      console.error('Error loading selections:', error);
+      setSideThreadSelections([]);
+      setShowSelectionList(false);
+    }
+    
     setPanelMessages(existingMessages || []);
     setSideThreadId(sideThreadId);
     setIsPanelOpen(true);
@@ -366,9 +439,35 @@ const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false }, ref) => {
               >
                 ✕
               </button>
-            </div>
-          </div>
+            </div>          </div>
           
+          {/* Selection list - show when multiple text selections exist */}
+          {showSelectionList && (
+            <div className="border-b border-gray-200 p-3 bg-gray-50">
+              <div className="text-xs font-medium text-gray-600 mb-2">Text Selections ({sideThreadSelections.length})</div>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {sideThreadSelections.map((selectionData, index) => (
+                  <button
+                    key={selectionData.selectedTextHash}
+                    onClick={() => switchToSelection(selectionData)}
+                    className={`w-full text-left p-2 rounded text-xs transition-colors ${
+                      currentSelectionHash === selectionData.selectedTextHash
+                        ? 'bg-indigo-100 border border-indigo-300 text-indigo-800'
+                        : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="font-medium truncate">
+                      "{selectionData.selectedText.substring(0, 50)}{selectionData.selectedText.length > 50 ? '...' : ''}"
+                    </div>
+                    <div className="text-gray-500 mt-1">
+                      {new Date(selectionData.firstMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="ask-about-this-content">
             {/* Only show selection on first load */}
             {selection && panelMessages.length === 0 && (

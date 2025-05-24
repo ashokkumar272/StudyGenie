@@ -270,3 +270,34 @@
 .thread-icon {
   animation: threadPulse 3s ease-in-out infinite;
 }
+
+/* Selection list styles */
+.selection-list-container {
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.selection-item {
+  transition: all 0.15s ease-in-out;
+  border-radius: 0.375rem;
+  word-break: break-word;
+}
+
+.selection-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+.selection-item.active {
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+.selection-text {
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+.selection-time {
+  font-size: 0.625rem;
+  opacity: 0.7;
+}

@@ -18,6 +18,7 @@ const Chat = () => {
     currentSessionId,
     sideThreads,
     fetchSideThreadMessages,
+    fetchSideThreadSelections,
     fetchSessionMessages
   } = useContext(ChatContext);  const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef(null);
@@ -80,21 +81,29 @@ const Chat = () => {
   // Check if a message has side threads
   const hasThreads = (messageId) => {
     return sideThreads.includes(messageId);
-  };
-
-  // Handle thread icon click
+  };  // Handle thread icon click
   const handleThreadClick = async (message) => {
     if (!askAboutThisRef.current || !currentSessionId) return;
     
     try {
-      // Fetch existing side thread messages
-      const existingMessages = await fetchSideThreadMessages(currentSessionId, message._id);
+      // Fetch all existing selections for this parent message
+      const allSelections = await fetchSideThreadSelections(currentSessionId, message._id);
+      
+      if (allSelections.length === 0) {
+        console.log('No side threads found for this message');
+        return;
+      }
+      
+      // If only one selection, load it directly
+      // If multiple selections, load the most recent one and show the selection list
+      const latestSelection = allSelections.sort((a, b) => new Date(b.firstMessageTime) - new Date(a.firstMessageTime))[0];
+      const existingMessages = await fetchSideThreadMessages(currentSessionId, message._id, latestSelection.selectedText);
       
       // Open the side panel with existing messages
       askAboutThisRef.current.openWithExistingThread({
         messageId: message._id,
         content: message.content,
-        selectedText: '', // No specific selection when opening from thread icon
+        selectedText: latestSelection.selectedText,
         existingMessages: existingMessages.map(msg => ({
           id: msg._id,
           role: msg.role,
@@ -102,7 +111,7 @@ const Chat = () => {
           timestamp: new Date(msg.timestamp),
           isError: false
         })),
-        sideThreadId: existingMessages.length > 0 ? existingMessages[0].chatSessionId : null
+        sideThreadId: latestSelection.sideThreadId
       });
     } catch (error) {
       console.error('Error loading side thread:', error);
