@@ -1,9 +1,11 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/authContext';
+import { ChatContext } from '../context/chatContext';
 import { Link, useNavigate } from 'react-router-dom';
 
 const Register = () => {
   const { register, error, clearError, loading } = useContext(AuthContext);
+  const { startNewSession } = useContext(ChatContext);
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -41,11 +43,16 @@ const Register = () => {
       setFormError('Password must be at least 6 characters');
       return;
     }
-    
-    // Submit form
+      // Submit form
     const success = await register({ name, email, password });
     if (success) {
-      navigate('/chat');
+      // Create a new session and navigate to it
+      const newSessionId = startNewSession();
+      if (newSessionId) {
+        navigate(`/chat/${newSessionId}`);
+      } else {
+        navigate('/chat');
+      }
     }
   };
   

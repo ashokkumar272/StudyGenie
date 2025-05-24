@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from '../context/authContext';
 import { ChatContext } from '../context/chatContext';
 import ReactMarkdown from 'react-markdown';
@@ -17,11 +17,13 @@ const Chat = () => {
     startNewSession,
     currentSessionId,
     sideThreads,
-    fetchSideThreadMessages
+    fetchSideThreadMessages,
+    fetchSessionMessages
   } = useContext(ChatContext);  const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef(null);
   const askAboutThisRef = useRef(null);
   const navigate = useNavigate();
+  const { sessionId } = useParams();
   
   // Redirect if not authenticated
   useEffect(() => {
@@ -29,6 +31,17 @@ const Chat = () => {
       navigate('/login');
     }
   }, [isAuthenticated, navigate]);
+
+  // Handle URL-based session management
+  useEffect(() => {
+    if (isAuthenticated && sessionId && sessionId !== currentSessionId) {
+      // Load the session from URL parameter
+      fetchSessionMessages(sessionId);
+    } else if (isAuthenticated && !sessionId && currentSessionId) {
+      // Redirect to current session URL if we have a session but no URL param
+      navigate(`/chat/${currentSessionId}`, { replace: true });
+    }
+  }, [isAuthenticated, sessionId, currentSessionId, fetchSessionMessages, navigate]);
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -51,9 +64,11 @@ const Chat = () => {
       await clearChatHistory();
     }
   };
-  
-  const handleNewChat = () => {
-    startNewSession();
+    const handleNewChat = () => {
+    const newSessionId = startNewSession();
+    if (newSessionId) {
+      navigate(`/chat/${newSessionId}`);
+    }
     setNewMessage('');
   };
     // Format timestamp

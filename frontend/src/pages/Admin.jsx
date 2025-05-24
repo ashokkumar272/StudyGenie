@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/authContext';
+import { ChatContext } from '../context/chatContext';
 import axios from 'axios';
 
 const Admin = () => {
   const { isAuthenticated, user } = useContext(AuthContext);
+  const { currentSessionId, startNewSession } = useContext(ChatContext);
   const navigate = useNavigate();
   
   const [stats, setStats] = useState(null);
@@ -35,10 +37,20 @@ const Admin = () => {
     } catch (err) {
       console.error('Admin data fetch error:', err);
       setError('Failed to load admin data. You may not have admin privileges.');
-      
-      // If not authorized, redirect to chat
+        // If not authorized, redirect to chat
       if (err.response?.status === 403) {
-        setTimeout(() => navigate('/chat'), 3000);
+        setTimeout(() => {
+          if (currentSessionId) {
+            navigate(`/chat/${currentSessionId}`);
+          } else {
+            const newSessionId = startNewSession();
+            if (newSessionId) {
+              navigate(`/chat/${newSessionId}`);
+            } else {
+              navigate('/chat');
+            }
+          }
+        }, 3000);
       }
     } finally {
       setLoading(false);
@@ -90,9 +102,19 @@ const Admin = () => {
         <div className="text-center p-8 max-w-md">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
             {error}
-          </div>
-          <button
-            onClick={() => navigate('/chat')}
+          </div>          <button
+            onClick={() => {
+              if (currentSessionId) {
+                navigate(`/chat/${currentSessionId}`);
+              } else {
+                const newSessionId = startNewSession();
+                if (newSessionId) {
+                  navigate(`/chat/${newSessionId}`);
+                } else {
+                  navigate('/chat');
+                }
+              }
+            }}
             className="bg-indigo-600 text-white px-4 py-2 rounded"
           >
             Back to Chat

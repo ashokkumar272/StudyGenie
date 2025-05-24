@@ -1,9 +1,11 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/authContext';
+import { ChatContext } from '../context/chatContext';
 import { Link, useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const { login, error, clearError, loading } = useContext(AuthContext);
+  const { startNewSession } = useContext(ChatContext);
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -17,13 +19,18 @@ const Login = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     clearError();
   };
-  
-  const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
     e.preventDefault();
     
     const success = await login({ email, password });
     if (success) {
-      navigate('/chat');
+      // Create a new session and navigate to it
+      const newSessionId = startNewSession();
+      if (newSessionId) {
+        navigate(`/chat/${newSessionId}`);
+      } else {
+        navigate('/chat');
+      }
     }
   };
   

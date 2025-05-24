@@ -1,9 +1,11 @@
 import React from 'react';
 import { useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChatContext } from '../context/chatContext';
 import { FiMessageSquare, FiPlusCircle, FiTrash2 } from 'react-icons/fi';
 
 const ChatSidebar = () => {
+  const navigate = useNavigate();
   const { 
     chatSessions, 
     currentSessionId, 
@@ -30,10 +32,14 @@ const ChatSidebar = () => {
   };
 
   return (
-    <div className="w-64 h-full bg-gray-100 border-r overflow-auto">
-      <div className="p-4">
+    <div className="w-64 h-full bg-gray-100 border-r overflow-auto">      <div className="p-4">
         <button
-          onClick={startNewSession}
+          onClick={() => {
+            const newSessionId = startNewSession();
+            if (newSessionId) {
+              navigate(`/chat/${newSessionId}`);
+            }
+          }}
           className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-2 px-4 rounded-lg mb-4 hover:bg-indigo-700 transition"
         >
           <FiPlusCircle />
@@ -53,7 +59,7 @@ const ChatSidebar = () => {
                 className={`flex items-start p-2 rounded-md cursor-pointer hover:bg-gray-200 group ${
                   currentSessionId === session._id ? 'bg-gray-200' : ''
                 }`}
-                onClick={() => fetchSessionMessages(session._id)}
+                onClick={() => navigate(`/chat/${session._id}`)}
               >
                 <div className="text-indigo-600 mr-3 mt-1">
                   <FiMessageSquare size={16} />

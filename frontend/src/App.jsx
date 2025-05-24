@@ -31,6 +31,14 @@ const App = () => {
                   } 
                 />
                 <Route 
+                  path="/chat/:sessionId" 
+                  element={
+                    <PrivateRoute>
+                      <Chat />
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
                   path="/admin" 
                   element={
                     <PrivateRoute>

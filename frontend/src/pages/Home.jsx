@@ -1,16 +1,27 @@
 import React, { useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/authContext';
+import { ChatContext } from '../context/chatContext';
 
 const Home = () => {
   const { isAuthenticated } = useContext(AuthContext);
+  const { currentSessionId, startNewSession } = useContext(ChatContext);
   const navigate = useNavigate();
   
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/chat');
+      if (currentSessionId) {
+        navigate(`/chat/${currentSessionId}`);
+      } else {
+        const newSessionId = startNewSession();
+        if (newSessionId) {
+          navigate(`/chat/${newSessionId}`);
+        } else {
+          navigate('/chat');
+        }
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, currentSessionId, navigate, startNewSession]);
   
   return (
     <div className="min-h-screen bg-gray-50">
