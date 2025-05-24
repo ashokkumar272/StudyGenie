@@ -236,15 +236,17 @@ export const ChatProvider = ({ children }) => {
       setError('Failed to start new chat session');
       return null;
     }
-  };
-
-  // Send follow-up question based on selected text
+  };  // Send follow-up question based on selected text
   const sendFollowupQuestion = async ({ selectedText, originalAssistantMessage, userFollowupQuestion }) => {
     try {
       // Validate content
       if (!selectedText || !originalAssistantMessage || !userFollowupQuestion.trim()) {
         setError('Missing information for follow-up question');
-        return false;
+        return {
+          messageId: Date.now().toString() + '-error',
+          message: 'Please provide both selected text and a follow-up question.',
+          isError: true
+        };
       }
       
       setLoading(true);
@@ -298,23 +300,32 @@ export const ChatProvider = ({ children }) => {
         
         // Refresh chat sessions list
         fetchChatSessions();
+        
+        // Return the response data for the side panel
+        return {
+          messageId: res.data.messageId,
+          message: res.data.message
+        };
       } catch (apiError) {
         // If API call fails, add error message
-        setMessages((prev) => [
-          ...prev, 
-          {
-            _id: Date.now().toString() + '-error',
-            role: 'assistant',
-            content: 'Sorry, I encountered an error processing your question. Please try again.',
-            chatSessionId: sessionId,
-            timestamp: new Date().toISOString(),
-            replyToMessageId: userMessageId
-          }
-        ]);
-        throw apiError;
+        const errorMessage = {
+          _id: Date.now().toString() + '-error',
+          role: 'assistant',
+          content: 'Sorry, I encountered an error processing your question. Please try again.',
+          chatSessionId: sessionId,
+          timestamp: new Date().toISOString(),
+          replyToMessageId: userMessageId
+        };
+        
+        setMessages((prev) => [...prev, errorMessage]);
+        
+        // Also return the error message for the side panel
+        return {
+          messageId: errorMessage._id,
+          message: errorMessage.content,
+          isError: true
+        };
       }
-      
-      return true;
     } catch (err) {
       console.error('Send follow-up message error:', err);
       setError('Failed to send follow-up message');

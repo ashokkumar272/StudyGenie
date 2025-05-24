@@ -61,11 +61,49 @@ const Chat = () => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
-  
   // Handle follow-up question submission
-  const handleFollowupSubmit = (followupData) => {
+  const handleFollowupSubmit = async (followupData) => {
     console.log("Follow-up data:", followupData);
-    sendFollowupQuestion(followupData);
+    // Create payload for the context
+    const payloadForContext = {
+      selectedText: followupData.selectedText,
+      originalAssistantMessage: followupData.originalMessage,
+      userFollowupQuestion: followupData.followupQuestion,
+      messageId: followupData.messageId
+    };
+    
+    try {
+      // Call the API via context
+      const response = await sendFollowupQuestion(payloadForContext);
+      
+      // Check if response contains error information
+      const isError = response?.isError || false;
+      
+      // Dispatch a custom event to notify the AskAboutThis component
+      const event = new CustomEvent('new-followup-response', {
+        detail: {
+          type: 'new-followup-response',
+          messageId: response?.messageId || Date.now().toString(),
+          message: response?.message || 'Response received',
+          isError: isError
+        }
+      });
+      
+      window.dispatchEvent(event);
+    } catch (error) {
+      console.error("Error handling followup:", error);
+      // Dispatch error event
+      const errorEvent = new CustomEvent('new-followup-response', {
+        detail: {
+          type: 'new-followup-response',
+          messageId: Date.now().toString() + '-error',
+          message: 'Sorry, there was an error processing your question. Please try again.',
+          isError: true
+        }
+      });
+      
+      window.dispatchEvent(errorEvent);
+    }
   };
 
   return (
