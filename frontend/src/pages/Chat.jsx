@@ -172,12 +172,11 @@ const Chat = () => {
                         data-role={msg.role}
                         data-message-id={msg._id || index}
                         data-content={msg.content}
-                      >
-                        {/* Thread icon for assistant messages that have side threads */}
+                      >                        {/* Thread icon for assistant messages that have side threads */}
                         {msg.role === 'assistant' && hasThreads(msg._id) && (
                           <button
                             onClick={() => handleThreadClick(msg)}
-                            className="thread-icon text-indigo-500 hover:text-indigo-700 transition-colors"
+                            className="thread-icon"
                             title="View side thread"
                           >
                             <svg 
