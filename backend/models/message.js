@@ -23,12 +23,36 @@ const MessageSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    // Fields for the "Ask About This" feature
-    fullAssistantMessage: {
+    // Chat type: main for regular chat, side for follow-up threads
+    chatType: {
+        type: String,
+        enum: ['main', 'side'],
+        default: 'main'
+    },
+    // For side threads, reference to the main thread
+    mainThreadId: {
         type: String,
         default: null
     },
+    // Parent message for replies
+    parentMessageId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Message',
+        default: null
+    },
+    // Which main message this side thread is linked to
+    linkedToMessageId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Message',
+        default: null
+    },
+    // Selected text for side threads
     selectedText: {
+        type: String,
+        default: null
+    },
+    // Legacy fields for backward compatibility
+    fullAssistantMessage: {
         type: String,
         default: null
     },

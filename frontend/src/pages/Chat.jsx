@@ -8,18 +8,19 @@ import ChatSidebar from '../components/ChatSidebar';
 import AskAboutThis from '../components/AskAboutThis';
 
 const Chat = () => {
-  const { isAuthenticated, user, logout } = useContext(AuthContext);
-  const { 
+  const { isAuthenticated, user, logout } = useContext(AuthContext);  const { 
     messages, 
     loading, 
     sendMessage, 
     sendFollowupQuestion,
     clearChatHistory,
     startNewSession,
-    currentSessionId
-  } = useContext(ChatContext);
-  const [newMessage, setNewMessage] = useState('');
+    currentSessionId,
+    sideThreads,
+    fetchSideThreadMessages
+  } = useContext(ChatContext);  const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef(null);
+  const askAboutThisRef = useRef(null);
   const navigate = useNavigate();
   
   // Redirect if not authenticated
@@ -55,11 +56,42 @@ const Chat = () => {
     startNewSession();
     setNewMessage('');
   };
-  
-  // Format timestamp
+    // Format timestamp
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Check if a message has side threads
+  const hasThreads = (messageId) => {
+    return sideThreads.includes(messageId);
+  };
+
+  // Handle thread icon click
+  const handleThreadClick = async (message) => {
+    if (!askAboutThisRef.current || !currentSessionId) return;
+    
+    try {
+      // Fetch existing side thread messages
+      const existingMessages = await fetchSideThreadMessages(currentSessionId, message._id);
+      
+      // Open the side panel with existing messages
+      askAboutThisRef.current.openWithExistingThread({
+        messageId: message._id,
+        content: message.content,
+        selectedText: '', // No specific selection when opening from thread icon
+        existingMessages: existingMessages.map(msg => ({
+          id: msg._id,
+          role: msg.role,
+          content: msg.content,
+          timestamp: new Date(msg.timestamp),
+          isError: false
+        })),
+        sideThreadId: existingMessages.length > 0 ? existingMessages[0].chatSessionId : null
+      });
+    } catch (error) {
+      console.error('Error loading side thread:', error);
+    }
   };
   // Handle follow-up question submission
   const handleFollowupSubmit = async (followupData) => {
@@ -125,16 +157,14 @@ const Chat = () => {
                   <p className="mb-6">Ask me anything and I'll do my best to help!</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {messages.map((msg, index) => (
+                <div className="space-y-4">                  {messages.map((msg, index) => (
                     <div
                       key={msg._id || index}
                       className={`flex ${
                         msg.role === 'user' ? 'justify-end' : 'justify-start'
                       }`}
-                    >
-                      <div
-                        className={`max-w-[80%] rounded-lg p-4 ${
+                    >                      <div
+                        className={`max-w-[80%] rounded-lg p-4 relative message-with-thread ${
                           msg.role === 'user'
                             ? 'bg-indigo-600 text-white'
                             : 'bg-white shadow-sm border'
@@ -143,6 +173,29 @@ const Chat = () => {
                         data-message-id={msg._id || index}
                         data-content={msg.content}
                       >
+                        {/* Thread icon for assistant messages that have side threads */}
+                        {msg.role === 'assistant' && hasThreads(msg._id) && (
+                          <button
+                            onClick={() => handleThreadClick(msg)}
+                            className="thread-icon text-indigo-500 hover:text-indigo-700 transition-colors"
+                            title="View side thread"
+                          >
+                            <svg 
+                              xmlns="http://www.w3.org/2000/svg" 
+                              width="16" 
+                              height="16" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              strokeWidth="2" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round"
+                            >
+                              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/>
+                            </svg>
+                          </button>
+                        )}
+                        
                         {msg.role === 'assistant' ? (
                           <div className="prose selectable-text">
                             <ReactMarkdown>{msg.content}</ReactMarkdown>
@@ -209,7 +262,11 @@ const Chat = () => {
             </div>
           </div>          {/* Empty container for the right panel that becomes visible when needed */}
           <div className="ask-panel-container">
-            <AskAboutThis onSubmit={handleFollowupSubmit} isPanel={true} />
+            <AskAboutThis 
+              ref={askAboutThisRef}
+              onSubmit={handleFollowupSubmit} 
+              isPanel={true} 
+            />
           </div>
         </div>
       </div>

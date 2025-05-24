@@ -11,6 +11,7 @@ export const ChatProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [chatSessions, setChatSessions] = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
+  const [sideThreads, setSideThreads] = useState([]); // Store message IDs that have side threads
   // Fetch chat history when user is authenticated
   useEffect(() => {
     if (isAuthenticated) {
@@ -58,8 +59,7 @@ export const ChatProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
-  // Fetch messages for a specific session
+  };  // Fetch messages for a specific session
   const fetchSessionMessages = async (sessionId) => {
     if (!sessionId) {
       console.error('No session ID provided');
@@ -76,6 +76,9 @@ export const ChatProvider = ({ children }) => {
       
       setMessages(res.data);
       setCurrentSessionId(sessionId);
+      
+      // Also fetch side threads for this session
+      await fetchSideThreads(sessionId);
     } catch (err) {
       console.error('Fetch session messages error:', err);
       setError('Failed to load chat messages');
@@ -83,6 +86,28 @@ export const ChatProvider = ({ children }) => {
       setMessages([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch side threads for a main thread
+  const fetchSideThreads = async (mainThreadId) => {
+    try {
+      const res = await axios.get(`/api/chat/side-threads/${mainThreadId}`);
+      setSideThreads(res.data || []);
+    } catch (err) {
+      console.error('Fetch side threads error:', err);
+      setSideThreads([]);
+    }
+  };
+
+  // Fetch messages for a specific side thread
+  const fetchSideThreadMessages = async (mainThreadId, linkedToMessageId) => {
+    try {
+      const res = await axios.get(`/api/chat/side-thread/${mainThreadId}/${linkedToMessageId}`);
+      return res.data || [];
+    } catch (err) {
+      console.error('Fetch side thread messages error:', err);
+      throw err;
     }
   };
 
@@ -334,12 +359,43 @@ export const ChatProvider = ({ children }) => {
       setLoading(false);
     }
   };
+  // Send side thread message
+  const sendSideThreadMessage = async ({ mainThreadId, linkedToMessageId, selectedText, userQuery }) => {
+    try {
+      if (!mainThreadId || !linkedToMessageId || !selectedText || !userQuery.trim()) {
+        throw new Error('Missing required information for side thread');
+      }
+      
+      const res = await axios.post('/api/chat/side-thread', {
+        mainThreadId,
+        linkedToMessageId,
+        selectedText,
+        userQuery
+      });
+      
+      if (!res.data || !res.data.message) {
+        throw new Error('Invalid response from server');
+      }
+      
+      // Refresh side threads list for the main thread
+      await fetchSideThreads(mainThreadId);
+      
+      return {
+        messageId: res.data.messageId,
+        message: res.data.message,
+        sideThreadId: res.data.sideThreadId,
+        userMessageId: res.data.userMessageId
+      };
+    } catch (err) {
+      console.error('Send side thread message error:', err);
+      throw err;
+    }
+  };
 
   // Clear error
   const clearError = () => {
     setError(null);
-  };
-  return (
+  };  return (
     <ChatContext.Provider
       value={{
         messages,
@@ -347,8 +403,11 @@ export const ChatProvider = ({ children }) => {
         error,
         chatSessions,
         currentSessionId,
+        sideThreads,
         sendMessage,
         sendFollowupQuestion,
+        sendSideThreadMessage,
+        fetchSideThreadMessages,
         clearChatHistory,
         clearError,
         fetchSessionMessages,

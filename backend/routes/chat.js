@@ -19,18 +19,19 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 
     // Generate a new chatSessionId if none provided
-    const sessionId = chatSessionId || Date.now().toString();
-
-    // Save user message to DB
+    const sessionId = chatSessionId || Date.now().toString();    // Save user message to DB
     const userMessage = new Message({
       userId,
       chatSessionId: sessionId,
       role: 'user',
-      content
-    });    await userMessage.save();
-
-    // Get the last 10 messages for this chat session for context
-    const messageHistory = await Message.find({ userId, chatSessionId: sessionId })
+      content,
+      chatType: 'main'
+    });await userMessage.save();    // Get the last 10 messages for this chat session for context
+    const messageHistory = await Message.find({ 
+      userId, 
+      chatSessionId: sessionId,
+      chatType: 'main'
+    })
       .sort({ timestamp: -1 })
       .limit(10)
       .sort({ timestamp: 1 });
@@ -73,7 +74,8 @@ router.post('/', authMiddleware, async (req, res) => {
       userId,
       chatSessionId: sessionId,
       role: 'assistant',
-      content: assistantResponse || 'Sorry, I could not generate a response. Please try again.'
+      content: assistantResponse || 'Sorry, I could not generate a response. Please try again.',
+      chatType: 'main'
     });
 
     await assistantMessage.save();
@@ -89,13 +91,13 @@ router.post('/', authMiddleware, async (req, res) => {
       console.error('Gemini API error:', error.response.data);
     }
     
-    try {
-      // Create a fallback response in case of error
+    try {      // Create a fallback response in case of error
       const errorMessage = new Message({
         userId,
         chatSessionId: sessionId,
         role: 'assistant',
-        content: 'Sorry, I encountered an error processing your request. Please try again.'
+        content: 'Sorry, I encountered an error processing your request. Please try again.',
+        chatType: 'main'
       });
       
       await errorMessage.save();
@@ -113,12 +115,15 @@ router.post('/', authMiddleware, async (req, res) => {
 });
 
 // @route   GET /api/chat/history
-// @desc    Get user's chat history
+// @desc    Get user's chat history (main messages only)
 // @access  Private
 router.get('/history', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
-    const messages = await Message.find({ userId }).sort({ timestamp: 1 });
+    const messages = await Message.find({ 
+      userId,
+      chatType: 'main'
+    }).sort({ timestamp: 1 });
     res.json(messages);
   } catch (error) {
     console.error('Get history error:', error.message);
@@ -132,10 +137,13 @@ router.get('/history', authMiddleware, async (req, res) => {
 router.get('/sessions', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
-    
-    // Get distinct chat sessions with first message content and timestamp for preview
+      // Get distinct chat sessions with first message content and timestamp for preview
     const sessions = await Message.aggregate([
-      { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+      { $match: { 
+          userId: new mongoose.Types.ObjectId(userId),
+          chatType: 'main'
+        }
+      },
       { $sort: { timestamp: 1 } },
       { $group: {
           _id: "$chatSessionId",
@@ -155,7 +163,7 @@ router.get('/sessions', authMiddleware, async (req, res) => {
 });
 
 // @route   GET /api/chat/session/:sessionId
-// @desc    Get messages for a specific chat session
+// @desc    Get messages for a specific chat session (main messages only)
 // @access  Private
 router.get('/session/:sessionId', authMiddleware, async (req, res) => {
   try {
@@ -164,7 +172,8 @@ router.get('/session/:sessionId', authMiddleware, async (req, res) => {
     
     const messages = await Message.find({ 
       userId, 
-      chatSessionId: sessionId 
+      chatSessionId: sessionId,
+      chatType: 'main' // Only get main messages, not side threads
     }).sort({ timestamp: 1 });
     
     res.json(messages);
@@ -297,6 +306,184 @@ router.post('/followup', authMiddleware, async (req, res) => {
       console.error('Gemini API error:', error.response.data);
     }
     res.status(500).json({ message: 'Server error processing follow-up question' });
+  }
+});
+
+// @route   POST /api/chat/side-thread
+// @desc    Create or continue a side thread conversation
+// @access  Private
+router.post('/side-thread', authMiddleware, async (req, res) => {
+  try {
+    const { mainThreadId, linkedToMessageId, selectedText, userQuery } = req.body;
+    const userId = req.user.id;
+
+    if (!mainThreadId || !linkedToMessageId || !selectedText || !userQuery) {
+      return res.status(400).json({ message: 'Missing required information for side thread' });
+    }
+
+    // Get the linked message for context
+    const linkedMessage = await Message.findById(linkedToMessageId);
+    if (!linkedMessage) {
+      return res.status(404).json({ message: 'Linked message not found' });
+    }
+
+    // Get main thread context (last 10 messages)
+    const mainThreadMessages = await Message.find({ 
+      userId, 
+      chatSessionId: mainThreadId,
+      chatType: 'main'
+    })
+    .sort({ timestamp: -1 })
+    .limit(10)
+    .sort({ timestamp: 1 });
+
+    // Get existing side thread messages
+    const sideThreadMessages = await Message.find({
+      userId,
+      mainThreadId,
+      linkedToMessageId,
+      chatType: 'side'
+    }).sort({ timestamp: 1 });
+
+    // Generate unique side thread ID if this is the first message
+    const sideThreadId = sideThreadMessages.length > 0 
+      ? sideThreadMessages[0].chatSessionId 
+      : `side_${Date.now()}_${linkedToMessageId}`;
+
+    // Save user question
+    const userMessage = new Message({
+      userId,
+      chatSessionId: sideThreadId,
+      role: 'user',
+      content: userQuery,
+      chatType: 'side',
+      mainThreadId,
+      linkedToMessageId,
+      selectedText: sideThreadMessages.length === 0 ? selectedText : null // Only store on first message
+    });
+    await userMessage.save();
+
+    // Prepare context for AI
+    const contextMessages = [
+      // System prompt
+      {
+        role: 'model',
+        parts: [{ text: 'You are a helpful assistant. The user is asking follow-up questions about a specific part of a previous conversation.' }]
+      },
+      // Main thread context (last few messages)
+      ...mainThreadMessages.slice(-5).map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.content }]
+      })),
+      // The linked message for context
+      {
+        role: 'model',
+        parts: [{ text: linkedMessage.content }]
+      },
+      // Previous side thread messages
+      ...sideThreadMessages.map(msg => ({
+        role: msg.role === 'user' ? 'user' : 'model',
+        parts: [{ text: msg.content }]
+      })),
+      // Current question with selected text context
+      {
+        role: 'user',
+        parts: [{ text: `About this specific part: "${selectedText}"\n\n${userQuery}` }]
+      }
+    ];
+
+    // Call Gemini API
+    const response = await axios.post(
+      process.env.GEMINI_API_URL,
+      {
+        contents: contextMessages,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 800,
+        }
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        params: {
+          key: process.env.GEMINI_API_KEY
+        }
+      }
+    );
+
+    const assistantResponse = response.data.candidates[0].content.parts[0].text;
+
+    // Save assistant response
+    const assistantMessage = new Message({
+      userId,
+      chatSessionId: sideThreadId,
+      role: 'assistant',
+      content: assistantResponse || 'Sorry, I could not generate a response. Please try again.',
+      chatType: 'side',
+      mainThreadId,
+      linkedToMessageId,
+      parentMessageId: userMessage._id
+    });
+    await assistantMessage.save();
+
+    res.json({
+      message: assistantResponse,
+      messageId: assistantMessage._id,
+      sideThreadId,
+      userMessageId: userMessage._id
+    });
+  } catch (error) {
+    console.error('Side thread error:', error.message);
+    if (error.response) {
+      console.error('Gemini API error:', error.response.data);
+    }
+    res.status(500).json({ message: 'Server error processing side thread' });
+  }
+});
+
+// @route   GET /api/chat/side-thread/:mainThreadId/:linkedToMessageId
+// @desc    Get side thread messages for a specific linked message
+// @access  Private
+router.get('/side-thread/:mainThreadId/:linkedToMessageId', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { mainThreadId, linkedToMessageId } = req.params;
+    
+    const sideMessages = await Message.find({
+      userId,
+      mainThreadId,
+      linkedToMessageId,
+      chatType: 'side'
+    }).sort({ timestamp: 1 });
+    
+    res.json(sideMessages);
+  } catch (error) {
+    console.error('Get side thread error:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   GET /api/chat/side-threads/:mainThreadId
+// @desc    Get all side threads for a main thread (returns message IDs that have side threads)
+// @access  Private
+router.get('/side-threads/:mainThreadId', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { mainThreadId } = req.params;
+    
+    // Get distinct linkedToMessageId values
+    const sideThreads = await Message.distinct('linkedToMessageId', {
+      userId,
+      mainThreadId,
+      chatType: 'side',
+      linkedToMessageId: { $ne: null }
+    });
+    
+    res.json(sideThreads);
+  } catch (error) {
+    console.error('Get side threads error:', error.message);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

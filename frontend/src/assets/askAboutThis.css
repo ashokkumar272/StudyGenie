@@ -211,3 +211,26 @@
 .ask-about-this-content form {
   margin-top: auto;
 }
+
+/* Thread icon styles */
+.thread-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.9);
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.thread-icon:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+}
+
+/* Make message container relative for absolute positioning of thread icon */
+.message-with-thread {
+  position: relative;
+}

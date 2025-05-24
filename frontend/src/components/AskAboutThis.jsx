@@ -1,15 +1,19 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
 import ReactMarkdown from 'react-markdown';
+import { ChatContext } from '../context/chatContext';
 import '../assets/askAboutThis.css';
 
-const AskAboutThis = ({ onSubmit, isPanel = false }) => {
+const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false }, ref) => {
+  const { currentSessionId, sendSideThreadMessage, fetchSideThreadMessages } = useContext(ChatContext);
   const [selection, setSelection] = useState(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [showButton, setShowButton] = useState(false);
-  const [showModal, setShowModal] = useState(false);  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [followupQuestion, setFollowupQuestion] = useState('');
   const [panelMessages, setPanelMessages] = useState([]);
+  const [sideThreadId, setSideThreadId] = useState(null);
   const modalRef = useRef(null);
   const buttonRef = useRef(null);
   const savedSelection = useRef(null);
@@ -102,14 +106,39 @@ const AskAboutThis = ({ onSubmit, isPanel = false }) => {
     // Always show the button first, regardless of mode
     setShowButton(true);
   };
-
   // Handle clicking the "Ask about this" button
-  const handleAskClick = () => {
+  const handleAskClick = async () => {
     setShowButton(false);
     
     if (isPanel) {
-      // Open the side panel
+      // Open the side panel and load existing messages if any
       setIsPanelOpen(true);
+      
+      if (selection && currentSessionId) {
+        try {
+          // Try to fetch existing side thread messages
+          const existingMessages = await fetchSideThreadMessages(currentSessionId, selection.messageId);
+          if (existingMessages.length > 0) {
+            // Convert backend messages to frontend format
+            const formattedMessages = existingMessages.map(msg => ({
+              id: msg._id,
+              role: msg.role,
+              content: msg.content,
+              timestamp: new Date(msg.timestamp),
+              isError: false
+            }));
+            setPanelMessages(formattedMessages);
+            setSideThreadId(existingMessages[0].chatSessionId);
+          } else {
+            setPanelMessages([]);
+            setSideThreadId(null);
+          }
+        } catch (error) {
+          console.error('Error loading existing side thread:', error);
+          setPanelMessages([]);
+          setSideThreadId(null);
+        }
+      }
     } else {
       // Open the modal dialog
       setShowModal(true);
@@ -125,39 +154,7 @@ const AskAboutThis = ({ onSubmit, isPanel = false }) => {
     ) {
       setShowModal(false);
     }
-  };
-    // Handle new AI response coming from parent
-  useEffect(() => {
-    // Listen for new chat messages from parent
-    const handleNewMessage = (event) => {
-      if (event.detail && event.detail.type === 'new-followup-response' && isPanelOpen) {
-        // Remove loading placeholder
-        setPanelMessages(prev => 
-          prev.filter(msg => !msg.isLoading)
-        );
-        
-        // Add the new assistant message
-        const newMessage = {
-          id: event.detail.messageId || Date.now().toString(),
-          role: 'assistant',
-          content: event.detail.message,
-          timestamp: new Date(),
-          isError: event.detail.isError || false
-        };
-        
-        setPanelMessages(prev => [...prev, newMessage]);
-      }
-    };
-    
-    // Add event listener
-    window.addEventListener('new-followup-response', handleNewMessage);
-    
-    // Cleanup
-    return () => {
-      window.removeEventListener('new-followup-response', handleNewMessage);
-    };
-  }, [isPanelOpen]);
-  // Format timestamp
+  };  // Format timestamp
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -169,66 +166,103 @@ const AskAboutThis = ({ onSubmit, isPanel = false }) => {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [panelMessages, isPanelOpen]);
-  
-  // Handle submitting the form
-  const handleModalSubmit = (event) => {
+    // Handle submitting the form
+  const handleModalSubmit = async (event) => {
     event.preventDefault();
     if (!selection || !followupQuestion.trim()) return;
     
-    // Create a user message for the panel
-    const userMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: followupQuestion,
-      timestamp: new Date()
-    };
-    
-    // Add it to panel messages
-    setPanelMessages(prev => [...prev, userMessage]);
-    
-    // Send to parent component for processing
-    const followupData = {
-      selectedText: selection.text,
-      originalMessage: selection.assistantMessage,
-      messageId: selection.messageId,
-      followupQuestion
-    };
-    
-    onSubmit(followupData);
-    
-    // Create an assistant message placeholder to show loading state
-    const assistantMessagePlaceholder = {
-      id: Date.now().toString() + '-loading',
-      role: 'assistant',
-      content: 'Loading...',
-      isLoading: true,
-      timestamp: new Date()
-    };
-    
-    // Add placeholder to panel messages
-    setPanelMessages(prev => [...prev, assistantMessagePlaceholder]);
-    
-    if (isPanel) {
-      // Just clear the input but keep the panel open
+    if (isPanel && currentSessionId) {
+      // Create a user message for the panel
+      const userMessage = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: followupQuestion,
+        timestamp: new Date()
+      };
+      
+      // Add it to panel messages
+      setPanelMessages(prev => [...prev, userMessage]);
+      
+      // Create a loading placeholder
+      const loadingMessage = {
+        id: Date.now().toString() + '-loading',
+        role: 'assistant',
+        content: 'Thinking...',
+        isLoading: true,
+        timestamp: new Date()
+      };
+      
+      setPanelMessages(prev => [...prev, loadingMessage]);
+      
+      try {
+        // Send to side thread API
+        const response = await sendSideThreadMessage({
+          mainThreadId: currentSessionId,
+          linkedToMessageId: selection.messageId,
+          selectedText: selection.text,
+          userQuery: followupQuestion
+        });
+        
+        // Remove loading message and add real response
+        setPanelMessages(prev => prev.filter(msg => !msg.isLoading));
+        
+        const assistantMessage = {
+          id: response.messageId,
+          role: 'assistant',
+          content: response.message,
+          timestamp: new Date(),
+          isError: false
+        };
+        
+        setPanelMessages(prev => [...prev, assistantMessage]);
+        setSideThreadId(response.sideThreadId);
+        
+      } catch (error) {
+        console.error('Error sending side thread message:', error);
+        
+        // Remove loading message and add error
+        setPanelMessages(prev => prev.filter(msg => !msg.isLoading));
+        
+        const errorMessage = {
+          id: Date.now().toString() + '-error',
+          role: 'assistant',
+          content: 'Sorry, there was an error processing your question. Please try again.',
+          timestamp: new Date(),
+          isError: true
+        };
+        
+        setPanelMessages(prev => [...prev, errorMessage]);
+      }
+      
+      // Clear the input
       setFollowupQuestion('');
     } else {
-      // Close the modal for the traditional flow
+      // Legacy modal mode - use old API
+      const followupData = {
+        selectedText: selection.text,
+        originalMessage: selection.assistantMessage,
+        messageId: selection.messageId,
+        followupQuestion
+      };
+      
+      onSubmit(followupData);
       setShowModal(false);
       setFollowupQuestion('');
     }
-  };
-  // Close the panel
+  };  // Close the panel
   const closePanel = () => {
     setIsPanelOpen(false);
     setSelection(null);
     setFollowupQuestion('');
-    // Don't clear panel messages so the conversation is preserved if reopened
+    setSideThreadId(null);
+    // Keep panel messages so conversation is preserved if reopened
   };
   
   // Start a new conversation in the panel
   const startNewConversation = () => {
     setPanelMessages([]);
     setFollowupQuestion('');
+    setSideThreadId(null);
     // Keep the panel open
   };
 
@@ -262,6 +296,23 @@ const AskAboutThis = ({ onSubmit, isPanel = false }) => {
     setFollowupQuestion(e.target.value);
     autoResizeTextarea();
   };
+
+  // Method to open panel with existing thread (called from parent)
+  const openWithExistingThread = ({ messageId, content, selectedText, existingMessages, sideThreadId }) => {
+    setSelection({
+      text: selectedText || 'View conversation thread',
+      assistantMessage: content,
+      messageId: messageId
+    });
+    setPanelMessages(existingMessages || []);
+    setSideThreadId(sideThreadId);
+    setIsPanelOpen(true);
+  };
+
+  // Expose the method to parent component
+  React.useImperativeHandle(ref, () => ({
+    openWithExistingThread
+  }));
 
   // Add event listeners
   useEffect(() => {
@@ -457,7 +508,7 @@ const AskAboutThis = ({ onSubmit, isPanel = false }) => {
       )}
     </>
   );
-};
+});
 
 AskAboutThis.propTypes = {
   onSubmit: PropTypes.func.isRequired,
