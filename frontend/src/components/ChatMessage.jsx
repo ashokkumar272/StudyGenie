@@ -28,8 +28,8 @@ const ChatMessage = ({
       );
     }    if (message.role === "assistant") {
       return (
-        <div className="selectable-text w-full min-w-0">
-          <MarkdownRenderer content={message.content} />
+        <div className={`selectable-text w-full min-w-0 ${variant === 'panel' ? 'overflow-visible' : ''}`}>
+          <MarkdownRenderer content={message.content} variant={variant} />
         </div>
       );
     }
@@ -44,12 +44,10 @@ const ChatMessage = ({
           ? "bg-indigo-600 text-white"
           : "bg-white shadow-sm border"
       } ${isLoading ? "opacity-60" : ""}`;
-    }
-
-    // Panel variant - AI messages fill full width, user messages stay limited
+    }    // Panel variant - AI messages fill full width, user messages stay limited
     if (message.role === "assistant") {
       // AI messages fill the full width in panel
-      return `w-full rounded-lg p-3 relative min-w-0 break-words overflow-hidden ${
+      return `w-full rounded-lg p-3 relative min-w-0 break-words ${
         isError
           ? "bg-red-50 border border-red-200"
           : "bg-white shadow-sm border"

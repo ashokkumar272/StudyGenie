@@ -169,9 +169,8 @@ const Chat = () => {
       {/* Main container with fixed height and three sections */}
       <div className="mx-auto h-full flex bg-white shadow-lg">
         {/* Chat history sidebar */}
-        <ChatSidebar />
-          {/* Chat area with right panel layout */}
-        <div className="flex flex-1">
+        <ChatSidebar />          {/* Chat area with right panel layout */}
+        <div className={`flex flex-1 chat-container ${isPanelOpen ? 'panel-open' : ''}`}>
           {/* Main chat area */}
           <div className={`flex flex-col relative main-chat-area ${isPanelOpen ? 'panel-open' : ''}`}>
             {/* Chat container - scrollable */}

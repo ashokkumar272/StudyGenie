@@ -5,7 +5,7 @@ import rehypeHighlight from 'rehype-highlight';
 import { Copy, Check } from 'lucide-react';
 import 'highlight.js/styles/github-dark.css';
 
-const MarkdownRenderer = ({ content }) => {
+const MarkdownRenderer = ({ content, variant = "main" }) => {
   const [copiedCode, setCopiedCode] = useState(null);
 
   const handleCopyCode = async (code, blockIndex) => {
@@ -32,12 +32,20 @@ const MarkdownRenderer = ({ content }) => {
           {children}
         </code>
       );
-    }// Block code with copy button
+    }    // Block code with copy button
     const codeString = String(children).replace(/\n$/, '');
     const blockIndex = `${Date.now()}-${Math.random()}`;
     
+    const containerClasses = variant === "panel" 
+      ? "relative group my-4 w-full min-w-0 max-w-full overflow-hidden"
+      : "relative group my-4 w-full min-w-0";
+    
+    const preClasses = variant === "panel"
+      ? "bg-gray-800 text-white rounded-b-md text-sm font-mono p-4 overflow-x-auto w-full min-w-0 max-w-full scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800"
+      : "bg-gray-800 text-white rounded-b-md text-sm font-mono p-4 overflow-x-auto w-full min-w-0 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800";
+    
     return (
-      <div className="relative group my-4 w-full min-w-0">
+      <div className={containerClasses}>
         <div className="flex items-center justify-between bg-gray-800 px-4 py-2 rounded-t-md">
           <span className="text-gray-300 text-sm font-medium truncate">
             {language || 'text'}
@@ -58,7 +66,7 @@ const MarkdownRenderer = ({ content }) => {
                 <span>Copy</span>
               </>
             )}          </button>        </div>
-        <pre className="bg-gray-800 text-white rounded-b-md text-sm font-mono p-4 overflow-x-auto w-full min-w-0 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+        <pre className={preClasses}>
           <code className={className} {...props}>
             {children}
           </code>

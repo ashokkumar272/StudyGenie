@@ -47,20 +47,36 @@
   display: flex;
 }
 
+/* Chat container - ensure proper 50/50 split when panel is open */
+.chat-container {
+  min-width: 0;
+}
+
+.chat-container.panel-open {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
 /* Panel container when panel is open - takes 50% width */
 .ask-panel-container.panel-open {
-  width: 50%;
-  flex: 0 0 50%;
+  width: 50% !important;
+  flex: 0 0 50% !important;
+  max-width: 50% !important; /* Strictly enforce max width */
+  overflow: hidden !important; /* Prevent expanding beyond container */
 }
 
 /* Main chat area should also be 50% when panel is open */
 .main-chat-area {
   flex: 1;
+  min-width: 0; /* Allow shrinking */
 }
 
 .main-chat-area.panel-open {
-  flex: 0 0 50%;
-  width: 50%;
+  flex: 0 0 50% !important;
+  width: 50% !important;
+  max-width: 50% !important; /* Strictly enforce max width */
+  overflow: hidden !important; /* Prevent expanding beyond container */
 }
 
 /* Right side panel styles */
@@ -70,8 +86,11 @@
   background-color: white;
   border-left: 1px solid #e5e7eb;
   overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal overflow at panel level */
   display: flex;
   flex-direction: column;
+  min-width: 0; /* Allow shrinking */
+  max-width: 100%; /* Stay within container */
 }
 
 .ask-about-this-header {
@@ -86,6 +105,8 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  min-width: 0; /* Allow shrinking */
+  overflow-x: visible; /* Allow horizontal scroll for nested content */
 }
 
 .ask-about-this-footer {
@@ -202,11 +223,36 @@
   border-radius: 0.375rem;
   padding: 0.75rem;
   overflow-x: auto;
+  min-width: 0; /* Allow shrinking */
+  max-width: 100%; /* Ensure it doesn't exceed parent */
 }
 
 .ask-about-this-panel .prose.prose-sm pre code {
   background-color: transparent;
   padding: 0;
+}
+
+/* Specific styles for side panel code blocks */
+.ask-about-this-panel .prose pre {
+  overflow-x: auto !important;
+  white-space: pre !important;
+  word-wrap: normal !important;
+  word-break: normal !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.ask-about-this-panel .prose pre code {
+  white-space: pre !important;
+  word-wrap: normal !important;
+  word-break: normal !important;
+}
+
+/* Ensure ChatMessage components in panel don't overflow */
+.ask-about-this-panel .prose {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .ask-about-this-panel .prose.prose-sm blockquote {
@@ -529,11 +575,97 @@
   background-color: #6b7280;
 }
 
+/* Enhanced styles for side panel code blocks */
+.ask-about-this-panel .scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.ask-about-this-panel pre.scrollbar-thin {
+  scrollbar-width: thin !important;
+}
+
+/* Force code blocks in side panel to be scrollable */
+.ask-about-this-panel pre {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  white-space: pre !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.ask-about-this-panel pre code {
+  white-space: pre !important;
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+  word-wrap: normal !important;
+}
+
+/* Ensure code block divs in side panel don't expand beyond container */
+.ask-about-this-panel .relative.group.my-4 {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+/* Force the actual pre element to show scrollbar */
+.ask-about-this-panel .relative.group.my-4 pre {
+  overflow-x: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Ensure the header doesn't expand */
+.ask-about-this-panel .relative.group.my-4 > div:first-child {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
 /* Ensure message containers don't overflow */
 .message-with-thread {
   max-width: 100%;
   min-width: 0;
   overflow: hidden;
+}
+
+/* Side panel message containers should allow horizontal scroll for code blocks */
+.ask-about-this-panel .message-with-thread {
+  overflow: visible;
+}
+
+/* Ensure code block containers in side panel can scroll */
+.ask-about-this-panel .prose > div {
+  min-width: 0;
+  overflow-x: visible;
+}
+
+/* Specific targeting for code block containers */
+.ask-about-this-panel .prose .relative.group {
+  min-width: 0;
+  overflow-x: visible;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Additional constraints for panel code blocks */
+.ask-about-this-panel .prose {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: visible;
+}
+
+/* Ensure all child elements respect container width */
+.ask-about-this-panel .prose * {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Mobile responsiveness improvements */
