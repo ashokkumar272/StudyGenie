@@ -35,27 +35,29 @@ const ChatMessage = ({
     }
 
     return <p className="break-words overflow-wrap-anywhere">{message.content}</p>;
-  };
-  const getMessageClasses = () => {
-    // Use responsive max-width instead of fixed percentage
-    const baseClasses = `max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl rounded-lg p-3 relative min-w-0 break-words overflow-hidden`;
-
+  };  const getMessageClasses = () => {
     if (variant === "main") {
-      return `${baseClasses} p-4 message-with-thread ${
+      // Use responsive max-width for main chat
+      const baseClasses = `max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl rounded-lg p-4 relative min-w-0 break-words overflow-hidden message-with-thread`;
+      return `${baseClasses} ${
         message.role === "user"
           ? "bg-indigo-600 text-white"
           : "bg-white shadow-sm border"
       } ${isLoading ? "opacity-60" : ""}`;
     }
 
-    // Panel variant - smaller max widths for panel context
-    return `${baseClasses.replace('xl:max-w-2xl', 'xl:max-w-lg')} ${
-      message.role === "user"
-        ? "bg-indigo-600 text-white"
-        : isError
-        ? "bg-red-50 border border-red-200"
-        : "bg-white shadow-sm border"
-    } ${isLoading ? "opacity-60" : ""}`;
+    // Panel variant - AI messages fill full width, user messages stay limited
+    if (message.role === "assistant") {
+      // AI messages fill the full width in panel
+      return `w-full rounded-lg p-3 relative min-w-0 break-words overflow-hidden ${
+        isError
+          ? "bg-red-50 border border-red-200"
+          : "bg-white shadow-sm border"
+      } ${isLoading ? "opacity-60" : ""}`;
+    } else {
+      // User messages keep limited width in panel
+      return `max-w-xs sm:max-w-sm md:max-w-md rounded-lg p-3 relative min-w-0 break-words overflow-hidden bg-indigo-600 text-white ${isLoading ? "opacity-60" : ""}`;
+    }
   };
 
   const getTimestampClasses = () => {

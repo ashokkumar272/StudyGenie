@@ -513,14 +513,12 @@ const AskAboutThis = React.forwardRef(
                 </div>
               )}              {/* Messages container */}
               <div className="flex flex-col space-y-4 mb-4">
-                {panelMessages.length > 0 ? (
-                  panelMessages.map((msg) => (
+                {panelMessages.length > 0 ? (                  panelMessages.map((msg) => (
                     <ChatMessage
                       key={msg.id}
                       message={msg}
                       isLoading={msg.isLoading}
                       isError={msg.isError}
-                      maxWidth="85%"
                       variant="panel"
                     />
                   ))
