@@ -21,6 +21,7 @@ const Chat = () => {
     fetchSideThreadSelections,
     fetchSessionMessages
   } = useContext(ChatContext);  const [newMessage, setNewMessage] = useState('');
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const askAboutThisRef = useRef(null);
   const navigate = useNavigate();
@@ -43,13 +44,17 @@ const Chat = () => {
       navigate(`/chat/${currentSessionId}`, { replace: true });
     }
   }, [isAuthenticated, sessionId, currentSessionId, fetchSessionMessages, navigate]);
-  
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  // Handle panel state changes
+  const handlePanelStateChange = (isOpen) => {
+    setIsPanelOpen(isOpen);
+  };
   
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -168,11 +173,10 @@ const Chat = () => {
       <div className="mx-auto h-full flex bg-white shadow-lg">
         {/* Chat history sidebar */}
         <ChatSidebar />
-        
-        {/* Chat area with right panel layout */}
+          {/* Chat area with right panel layout */}
         <div className="flex flex-1">
           {/* Main chat area */}
-          <div className="flex-1 flex flex-col relative">
+          <div className={`flex flex-col relative main-chat-area ${isPanelOpen ? 'panel-open' : ''}`}>
             {/* Chat container - scrollable */}
             <div className="flex-1 overflow-auto p-4">
               {messages.length === 0 ? (
@@ -284,11 +288,11 @@ const Chat = () => {
               </div>
             </div>
           </div>          {/* Empty container for the right panel that becomes visible when needed */}
-          <div className="ask-panel-container">
-            <AskAboutThis 
+          <div className={`ask-panel-container ${isPanelOpen ? 'panel-open' : ''}`}>            <AskAboutThis 
               ref={askAboutThisRef}
               onSubmit={handleFollowupSubmit} 
               isPanel={true} 
+              onPanelStateChange={handlePanelStateChange}
             />
           </div>
         </div>

@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { ChatContext } from '../context/chatContext';
 import '../assets/askAboutThis.css';
 
-const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false }, ref) => {
+const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false, onPanelStateChange }, ref) => {
   const { currentSessionId, sendSideThreadMessage, fetchSideThreadMessages, fetchSideThreadSelections } = useContext(ChatContext);
   const [selection, setSelection] = useState(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -185,13 +185,19 @@ const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false }, ref) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
-
   // Scroll to bottom when panel messages change
   useEffect(() => {
     if (messagesEndRef.current && isPanelOpen) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [panelMessages, isPanelOpen]);
+
+  // Notify parent of panel state changes
+  useEffect(() => {
+    if (onPanelStateChange) {
+      onPanelStateChange(isPanelOpen);
+    }
+  }, [isPanelOpen, onPanelStateChange]);
     // Handle submitting the form
   const handleModalSubmit = async (event) => {
     event.preventDefault();
@@ -381,10 +387,10 @@ const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false }, ref) => {
     setSideThreadId(sideThreadId);
     setIsPanelOpen(true);
   };
-
   // Expose the method to parent component
   React.useImperativeHandle(ref, () => ({
-    openWithExistingThread
+    openWithExistingThread,
+    isPanelOpen
   }));
 
   // Add event listeners
@@ -611,7 +617,8 @@ const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false }, ref) => {
 
 AskAboutThis.propTypes = {
   onSubmit: PropTypes.func.isRequired,
-  isPanel: PropTypes.bool
+  isPanel: PropTypes.bool,
+  onPanelStateChange: PropTypes.func
 };
 
 export default AskAboutThis;
