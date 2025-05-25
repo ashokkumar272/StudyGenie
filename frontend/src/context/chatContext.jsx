@@ -418,6 +418,29 @@ export const ChatProvider = ({ children }) => {
       throw err;
     }
   };
+  // Get chat summary for a session
+  const getChatSummary = async (sessionId) => {
+    try {
+      if (!sessionId) {
+        throw new Error('Session ID is required');
+      }
+      
+      setLoading(true);
+      const res = await axios.get(`/api/chat/summary/${sessionId}`);
+      
+      if (!res.data) {
+        throw new Error('Invalid response from server');
+      }
+      
+      return res.data;
+    } catch (err) {
+      console.error('Get chat summary error:', err);
+      setError('Failed to generate chat summary');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
   // Clear error
   const clearError = () => {
     setError(null);
@@ -438,7 +461,8 @@ export const ChatProvider = ({ children }) => {
         clearError,
         fetchSessionMessages,
         deleteSession,
-        startNewSession
+        startNewSession,
+        getChatSummary
       }}
     >
       {children}

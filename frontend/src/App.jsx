@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Chat from './pages/Chat';
 import Admin from './pages/Admin';
+import SummaryPage from './pages/SummaryPage';
 import PrivateRoute from './components/PrivateRoute';
 import { AuthProvider } from './context/authContext';
 import { ChatProvider } from './context/chatContext';
@@ -35,6 +36,14 @@ const App = () => {
                   element={
                     <PrivateRoute>
                       <Chat />
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
+                  path="/summary/:sessionId" 
+                  element={
+                    <PrivateRoute>
+                      <SummaryPage />
                     </PrivateRoute>
                   } 
                 />

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChatContext } from '../context/chatContext';
-import { FiMessageSquare, FiPlusCircle, FiTrash2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiMessageSquare, FiPlusCircle, FiTrash2, FiChevronLeft, FiChevronRight, FiFileText } from 'react-icons/fi';
 
 const ChatSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -79,8 +79,7 @@ const ChatSidebar = () => {
                   >
                     <div className="text-indigo-600 mr-3 mt-1">
                       <FiMessageSquare size={16} />
-                    </div>
-                    <div className="flex-1 min-w-0">
+                    </div>                    <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
                         {getMessagePreview(session.firstMessage)}
                       </p>
@@ -88,17 +87,30 @@ const ChatSidebar = () => {
                         {formatDate(session.lastMessageTime)}
                       </p>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (window.confirm('Are you sure you want to delete this conversation?')) {
-                          deleteSession(session._id);
-                        }
-                      }}
-                      className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
-                    >
-                      <FiTrash2 size={16} />
-                    </button>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/summary/${session._id}`);
+                        }}
+                        className="text-gray-400 hover:text-blue-500 transition p-1"
+                        title="View summary"
+                      >
+                        <FiFileText size={14} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm('Are you sure you want to delete this conversation?')) {
+                            deleteSession(session._id);
+                          }
+                        }}
+                        className="text-gray-400 hover:text-red-500 transition p-1"
+                        title="Delete conversation"
+                      >
+                        <FiTrash2 size={14} />
+                      </button>
+                    </div>
                   </div>
                 ))
               )}

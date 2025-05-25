@@ -3,9 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from '../context/authContext';
 import { ChatContext } from '../context/chatContext';
 import ReactMarkdown from 'react-markdown';
-import { FiSend, FiTrash2, FiPlusCircle } from 'react-icons/fi';
+import { FiSend, FiTrash2, FiPlusCircle, FiFileText } from 'react-icons/fi';
 import ChatSidebar from '../components/ChatSidebar';
 import AskAboutThis from '../components/AskAboutThis';
+import ChatSummary from '../components/ChatSummary';
 
 const Chat = () => {
   const { isAuthenticated, user, logout } = useContext(AuthContext);  const { 
@@ -22,6 +23,7 @@ const Chat = () => {
     fetchSessionMessages
   } = useContext(ChatContext);  const [newMessage, setNewMessage] = useState('');
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const askAboutThisRef = useRef(null);
   const navigate = useNavigate();
@@ -245,8 +247,7 @@ const Chat = () => {
               )}
             </div>
             
-            {/* Input area - fixed at bottom */}
-            <div className="border-t p-4">
+            {/* Input area - fixed at bottom */}            <div className="border-t p-4">
               <div className="flex">
                 <button
                   onClick={handleNewChat}
@@ -262,6 +263,15 @@ const Chat = () => {
                   title="Clear conversation"
                 >
                   <FiTrash2 size={20} />
+                </button>
+
+                <button
+                  onClick={() => setSummaryOpen(true)}
+                  className="mr-2 p-2 text-gray-500 hover:text-blue-500 rounded-full"
+                  title="Chat summary"
+                  disabled={!currentSessionId || messages.length === 0}
+                >
+                  <FiFileText size={20} />
                 </button>
                 
                 <form onSubmit={handleSubmit} className="flex-1 flex">
@@ -294,9 +304,15 @@ const Chat = () => {
               isPanel={true} 
               onPanelStateChange={handlePanelStateChange}
             />
-          </div>
-        </div>
+          </div>        </div>
       </div>
+
+      {/* Chat Summary Modal */}
+      <ChatSummary 
+        sessionId={currentSessionId}
+        isOpen={summaryOpen}
+        onClose={() => setSummaryOpen(false)}
+      />
     </div>
   );
 };

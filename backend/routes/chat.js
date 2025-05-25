@@ -567,4 +567,131 @@ router.get('/side-threads/:mainThreadId', authMiddleware, async (req, res) => {
   }
 });
 
+// @route   GET /api/chat/summary/:sessionId
+// @desc    Get summarized chat session including main and side threads
+// @access  Private
+router.get('/summary/:sessionId', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { sessionId } = req.params;
+
+    // STEP 1: Fetch All Messages
+    
+    // Fetch main messages
+    const mainMessages = await Message.find({
+      userId,
+      chatSessionId: sessionId,
+      chatType: 'main'
+    }).sort({ timestamp: 1 });
+
+    // Fetch side messages
+    const sideMessages = await Message.find({
+      userId,
+      mainThreadId: sessionId,
+      chatType: 'side'
+    }).sort({ timestamp: 1 });
+
+    // STEP 2: Group Side Messages by linkedToMessageId
+    const sideThreadsMap = new Map();
+
+    for (const sideMessage of sideMessages) {
+      const key = sideMessage.linkedToMessageId.toString();
+      if (!sideThreadsMap.has(key)) {
+        sideThreadsMap.set(key, []);
+      }
+      sideThreadsMap.get(key).push(sideMessage);
+    }
+
+    // STEP 3: Initialize Final Sequence
+    const finalFormattedMessages = [];
+
+    // STEP 4: Combine Main + Side in Chronological Order with Labels
+    for (const mainMessage of mainMessages) {
+      // Add Main User Message
+      if (mainMessage.role === 'user') {
+        finalFormattedMessages.push(`User: ${mainMessage.content}`);
+      }
+
+      // Add Main Assistant Message
+      if (mainMessage.role === 'assistant') {
+        finalFormattedMessages.push(`Assistant: ${mainMessage.content}`);
+      }
+
+      // Add Side Threads if present
+      const linkedId = mainMessage._id.toString();
+      if (sideThreadsMap.has(linkedId)) {
+        const sideThreadMessages = sideThreadsMap.get(linkedId);
+        for (const sideMessage of sideThreadMessages) {
+          const label = `↳ [Side Thread - ${sideMessage.role}]`;
+          const formatted = `${label}: ${sideMessage.content}`;
+          finalFormattedMessages.push(formatted);
+        }
+      }
+    }
+
+    // STEP 5: Join into One String (for Summarization Model)
+    const inputToSummarizer = finalFormattedMessages.join('\n\n');
+
+    // STEP 6: Send to Summarizer AI (Gemini API)
+    try {
+      const summaryResponse = await axios.post(
+        process.env.GEMINI_API_URL,
+        {
+          contents: [
+            {
+              role: 'user',
+              parts: [{ 
+                text: `Please provide a comprehensive summary of the following conversation. Include key topics discussed, main questions asked, answers provided, and any follow-up discussions. Organize the summary in a clear, structured format:\n\n${inputToSummarizer}` 
+              }]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 1000,
+          }
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          params: {
+            key: process.env.GEMINI_API_KEY
+          }
+        }
+      );
+
+      const summary = summaryResponse.data.candidates[0].content.parts[0].text;
+
+      // Return the summary along with metadata
+      res.json({
+        sessionId,
+        summary,
+        totalMainMessages: mainMessages.length,
+        totalSideMessages: sideMessages.length,
+        mainThreadsWithSideThreads: sideThreadsMap.size,
+        generatedAt: new Date().toISOString(),
+        rawConversation: inputToSummarizer // Optional: include raw formatted conversation
+      });
+    } catch (summaryError) {
+      console.error('Summary generation error:', summaryError);
+      
+      // Fallback: return formatted conversation without AI summary
+      res.json({
+        sessionId,
+        summary: "Summary generation temporarily unavailable. Here's the formatted conversation:",
+        totalMainMessages: mainMessages.length,
+        totalSideMessages: sideMessages.length,
+        mainThreadsWithSideThreads: sideThreadsMap.size,
+        generatedAt: new Date().toISOString(),
+        rawConversation: inputToSummarizer,
+        error: "AI summarization failed, showing raw conversation"
+      });
+    }
+
+  } catch (error) {
+    console.error('Chat summary error:', error.message);
+    res.status(500).json({ message: 'Server error generating chat summary' });
+  }
+});
+
 module.exports = router;
