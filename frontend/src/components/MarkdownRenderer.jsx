@@ -22,32 +22,29 @@ const MarkdownRenderer = ({ content }) => {
     const match = /language-(\w+)/.exec(className || '');
     const language = match ? match[1] : '';
     const isInline = !className;
-    
-    if (isInline) {
+      if (isInline) {
       // Inline code styling
       return (
         <code 
-          className="bg-gray-700 text-white px-1 py-0.5 rounded text-sm font-mono"
+          className="bg-gray-700 text-white px-1 py-0.5 rounded text-sm font-mono break-all"
           {...props}
         >
           {children}
         </code>
       );
-    }
-
-    // Block code with copy button
+    }// Block code with copy button
     const codeString = String(children).replace(/\n$/, '');
     const blockIndex = `${Date.now()}-${Math.random()}`;
     
     return (
-      <div className="relative group my-4 max-w-full">
+      <div className="relative group my-4 w-full min-w-0">
         <div className="flex items-center justify-between bg-gray-800 px-4 py-2 rounded-t-md">
-          <span className="text-gray-300 text-sm font-medium">
+          <span className="text-gray-300 text-sm font-medium truncate">
             {language || 'text'}
           </span>
           <button
             onClick={() => handleCopyCode(codeString, blockIndex)}
-            className="flex items-center gap-1 text-gray-300 hover:text-white transition-colors bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-sm"
+            className="flex items-center gap-1 text-gray-300 hover:text-white transition-colors bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-sm flex-shrink-0"
             title="Copy code"
           >
             {copiedCode === blockIndex ? (
@@ -60,9 +57,8 @@ const MarkdownRenderer = ({ content }) => {
                 <Copy size={14} />
                 <span>Copy</span>
               </>
-            )}
-          </button>        </div>
-        <pre className="bg-gray-800 text-white rounded-b-md text-sm font-mono p-4 overflow-x-auto max-w-full">
+            )}          </button>        </div>
+        <pre className="bg-gray-800 text-white rounded-b-md text-sm font-mono p-4 overflow-x-auto w-full min-w-0 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
           <code className={className} {...props}>
             {children}
           </code>
@@ -79,15 +75,14 @@ const MarkdownRenderer = ({ content }) => {
     if (codeElement) {
       return <CodeBlock {...codeElement.props} />;
     }
-    
-    // Fallback for pre without code
+      // Fallback for pre without code
     return (
-      <pre className="bg-gray-800 text-white p-4 rounded-md text-sm font-mono my-4 overflow-x-auto max-w-full" {...props}>
+      <pre className="bg-gray-800 text-white p-4 rounded-md text-sm font-mono my-4 overflow-x-auto w-full min-w-0 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800" {...props}>
         {children}
       </pre>
     );
   };  return (
-    <div className="w-full break-words prose max-w-none">
+    <div className="w-full break-words prose max-w-none min-w-0">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight]}

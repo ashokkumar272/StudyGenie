@@ -28,17 +28,17 @@ const ChatMessage = ({
       );
     }    if (message.role === "assistant") {
       return (
-        <div className="selectable-text">
+        <div className="selectable-text w-full min-w-0">
           <MarkdownRenderer content={message.content} />
         </div>
       );
     }
 
-    return <p>{message.content}</p>;
+    return <p className="break-words overflow-wrap-anywhere">{message.content}</p>;
   };
-
   const getMessageClasses = () => {
-    const baseClasses = `max-w-[${maxWidth}] rounded-lg p-3 relative`;
+    // Use responsive max-width instead of fixed percentage
+    const baseClasses = `max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl rounded-lg p-3 relative min-w-0 break-words overflow-hidden`;
 
     if (variant === "main") {
       return `${baseClasses} p-4 message-with-thread ${
@@ -48,8 +48,8 @@ const ChatMessage = ({
       } ${isLoading ? "opacity-60" : ""}`;
     }
 
-    // Panel variant
-    return `${baseClasses} ${
+    // Panel variant - smaller max widths for panel context
+    return `${baseClasses.replace('xl:max-w-2xl', 'xl:max-w-lg')} ${
       message.role === "user"
         ? "bg-indigo-600 text-white"
         : isError
