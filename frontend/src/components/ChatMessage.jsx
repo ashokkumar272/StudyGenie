@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import ReactMarkdown from "react-markdown";
+import MarkdownRenderer from "./MarkdownRenderer";
 
 const ChatMessage = ({
   message,
@@ -26,12 +26,10 @@ const ChatMessage = ({
           <p>Thinking...</p>
         </div>
       );
-    }
-
-    if (message.role === "assistant") {
+    }    if (message.role === "assistant") {
       return (
-        <div className="prose selectable-text">
-          <ReactMarkdown>{message.content}</ReactMarkdown>
+        <div className="selectable-text">
+          <MarkdownRenderer content={message.content} />
         </div>
       );
     }
