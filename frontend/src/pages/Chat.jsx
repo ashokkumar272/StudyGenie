@@ -7,6 +7,7 @@ import { FiSend, FiTrash2, FiPlusCircle, FiFileText } from 'react-icons/fi';
 import ChatSidebar from '../components/ChatSidebar';
 import AskAboutThis from '../components/AskAboutThis';
 import ChatSummary from '../components/ChatSummary';
+import ChatMessage from '../components/ChatMessage';
 
 const Chat = () => {
   const { isAuthenticated, user, logout } = useContext(AuthContext);  const { 
@@ -71,18 +72,12 @@ const Chat = () => {
     if (window.confirm('Are you sure you want to clear the conversation history?')) {
       await clearChatHistory();
     }
-  };
-    const handleNewChat = () => {
+  };    const handleNewChat = () => {
     const newSessionId = startNewSession();
     if (newSessionId) {
       navigate(`/chat/${newSessionId}`);
     }
     setNewMessage('');
-  };
-    // Format timestamp
-  const formatTime = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   // Check if a message has side threads
@@ -186,61 +181,16 @@ const Chat = () => {
                   <h2 className="text-2xl font-bold mb-2">Welcome to AI Chatbot</h2>
                   <p className="mb-6">Ask me anything and I'll do my best to help!</p>
                 </div>
-              ) : (
-                <div className="space-y-4">                  {messages.map((msg, index) => (
-                    <div
+              ) : (                <div className="space-y-4">
+                  {messages.map((msg, index) => (
+                    <ChatMessage
                       key={msg._id || index}
-                      className={`flex ${
-                        msg.role === 'user' ? 'justify-end' : 'justify-start'
-                      }`}
-                    >                      <div
-                        className={`max-w-[80%] rounded-lg p-4 relative message-with-thread ${
-                          msg.role === 'user'
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-white shadow-sm border'
-                        }`}
-                        data-role={msg.role}
-                        data-message-id={msg._id || index}
-                        data-content={msg.content}
-                      >                        {/* Thread icon for assistant messages that have side threads */}
-                        {msg.role === 'assistant' && hasThreads(msg._id) && (
-                          <button
-                            onClick={() => handleThreadClick(msg)}
-                            className="thread-icon"
-                            title="View side thread"
-                          >
-                            <svg 
-                              xmlns="http://www.w3.org/2000/svg" 
-                              width="16" 
-                              height="16" 
-                              viewBox="0 0 24 24" 
-                              fill="none" 
-                              stroke="currentColor" 
-                              strokeWidth="2" 
-                              strokeLinecap="round" 
-                              strokeLinejoin="round"
-                            >
-                              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/>
-                            </svg>
-                          </button>
-                        )}
-                        
-                        {msg.role === 'assistant' ? (
-                          <div className="prose selectable-text">
-                            <ReactMarkdown>{msg.content}</ReactMarkdown>
-                          </div>
-                        ) : (
-                          <p>{msg.content}</p>
-                        )}
-                        <div
-                          className={`text-xs mt-1 ${
-                            msg.role === 'user' ? 'text-indigo-200' : 'text-gray-500'
-                          }`}
-                        >
-                          {formatTime(msg.timestamp)}
-                        </div>
-                      </div>
-                    </div>
+                      message={msg}
+                      onThreadClick={handleThreadClick}
+                      hasThreads={hasThreads(msg._id)}
+                      showThreadIcon={true}
+                      variant="main"
+                    />
                   ))}
                   <div ref={messagesEndRef} />
                 </div>

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useContext } from "react";
 import PropTypes from "prop-types";
 import ReactMarkdown from "react-markdown";
 import { ChatContext } from "../context/chatContext";
+import ChatMessage from "./ChatMessage";
 import "../assets/askAboutThis.css";
 
 const AskAboutThis = React.forwardRef(
@@ -181,8 +182,7 @@ const AskAboutThis = React.forwardRef(
         // Open the modal dialog
         setShowModal(true);
       }
-    };
-    // Handle click outside of modal
+    };    // Handle click outside of modal
     const handleClickOutside = (event) => {
       if (
         modalRef.current &&
@@ -192,13 +192,6 @@ const AskAboutThis = React.forwardRef(
       ) {
         setShowModal(false);
       }
-    }; // Format timestamp
-    const formatTime = (timestamp) => {
-      const date = new Date(timestamp);
-      return date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
     };
     // Scroll to bottom when panel messages change
     useEffect(() => {
@@ -518,51 +511,18 @@ const AskAboutThis = React.forwardRef(
                 <div className="ask-about-this-selection">
                   "{selection.text}"
                 </div>
-              )}
-
-              {/* Messages container */}
+              )}              {/* Messages container */}
               <div className="flex flex-col space-y-4 mb-4">
                 {panelMessages.length > 0 ? (
                   panelMessages.map((msg) => (
-                    <div
+                    <ChatMessage
                       key={msg.id}
-                      className={`flex ${
-                        msg.role === "user" ? "justify-end" : "justify-start"
-                      }`}
-                    >
-                      {" "}
-                      <div
-                        className={`max-w-[85%] rounded-lg p-3 ${
-                          msg.role === "user"
-                            ? "bg-indigo-600 text-white"
-                            : msg.isError
-                            ? "bg-red-50 border border-red-200"
-                            : "bg-white shadow-sm border"
-                        } ${msg.isLoading ? "opacity-60" : ""}`}
-                      >
-                        {msg.isLoading ? (
-                          <div className="flex items-center">
-                            <div className="w-5 h-5 border-t-2 border-indigo-500 rounded-full animate-spin mr-2"></div>
-                            <p>Thinking...</p>
-                          </div>
-                        ) : msg.role === "assistant" ? (
-                          <div className="prose prose-sm selectable-text">
-                            <ReactMarkdown>{msg.content}</ReactMarkdown>
-                          </div>
-                        ) : (
-                          <p>{msg.content}</p>
-                        )}
-                        <div
-                          className={`text-xs mt-1 ${
-                            msg.role === "user"
-                              ? "text-indigo-200"
-                              : "text-gray-500"
-                          }`}
-                        >
-                          {formatTime(msg.timestamp)}
-                        </div>
-                      </div>
-                    </div>
+                      message={msg}
+                      isLoading={msg.isLoading}
+                      isError={msg.isError}
+                      maxWidth="85%"
+                      variant="panel"
+                    />
                   ))
                 ) : (
                   <div className="text-center py-6 flex flex-col items-center">
