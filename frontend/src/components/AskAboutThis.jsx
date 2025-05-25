@@ -20,7 +20,7 @@ const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false, onPanelState
   const modalRef = useRef(null);
   const buttonRef = useRef(null);
   const savedSelection = useRef(null);  const messagesEndRef = useRef(null);
-  const textareaRef = useRef(null);
+  const inputRef = useRef(null);
 
   // Simple hash function to match backend
   const simpleHash = (str) => {
@@ -329,18 +329,9 @@ const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false, onPanelState
     setCurrentSelectionHash(null);
     // Keep the panel open and preserve selections list
   };
-
-  // Handle textarea auto-resize
-  const autoResizeTextarea = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
-    }
-  };
-  
-  // Handle textarea key events (Ctrl+Enter or Command+Enter to submit)
+  // Handle input key events (Enter to submit)
   const handleKeyDown = (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    if (e.key === 'Enter') {
       e.preventDefault();
       if (followupQuestion.trim() && selection) {
         handleModalSubmit(e);
@@ -348,17 +339,9 @@ const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false, onPanelState
     }
   };
   
-  // Reset textarea height on new message
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
-  }, [followupQuestion]);
-  
-  // Adjust textarea height when input changes
-  const handleTextareaChange = (e) => {
+  // Handle input change
+  const handleInputChange = (e) => {
     setFollowupQuestion(e.target.value);
-    autoResizeTextarea();
   };
   // Method to open panel with existing thread (called from parent)
   const openWithExistingThread = async ({ messageId, content, selectedText, existingMessages, sideThreadId }) => {
@@ -536,26 +519,24 @@ const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false, onPanelState
               )}
               <div ref={messagesEndRef} />
             </div>
-            
-            {/* Input form */}
-            <form onSubmit={handleModalSubmit} className="mt-auto">
-              <textarea
-                ref={textareaRef}
-                className="ask-about-this-input"
+              {/* Input form */}
+            <form onSubmit={handleModalSubmit} className="mt-auto flex">              <input
+                ref={inputRef}
+                type="text"
                 value={followupQuestion}
-                onChange={handleTextareaChange}
+                onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask for clarification or follow-up questions..."
+                className="flex-1 border rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 required
               />
               
               <button 
                 type="submit" 
-                className="ask-about-this-button flex items-center justify-center gap-2"
+                className="bg-indigo-600 text-white px-4 py-2 rounded-r-lg flex items-center justify-center disabled:opacity-50"
                 disabled={!selection || !followupQuestion.trim()}
               >
-                <span>Send</span>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="22" y1="2" x2="11" y2="13"></line>
                   <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                 </svg>
@@ -580,12 +561,11 @@ const AskAboutThis = React.forwardRef(({ onSubmit, isPanel = false, onPanelState
               "{selection && selection.text}"
             </div>
             
-            <form onSubmit={handleModalSubmit}>
-              <textarea
-                ref={textareaRef}
+            <form onSubmit={handleModalSubmit}>              <textarea
+                ref={inputRef}
                 className="w-full border border-gray-300 rounded-md p-2 mb-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 value={followupQuestion}
-                onChange={handleTextareaChange}
+                onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder="Ask for clarification or follow-up questions about the selected text..."
                 required
