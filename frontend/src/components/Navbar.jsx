@@ -21,7 +21,7 @@ const Navbar = () => {
   };
   return (
     <div className='fixed top-0 left-0 right-0 z-10 bg-indigo-600 text-white flex justify-between px-6 py-4 align-bottom shadow-md'>
-      <Link to="/" className='text-2xl font-bold'>AI Chatbot</Link>
+      <Link to="/" className='text-2xl font-bold'>StudyGenie</Link>
       <div>
         <ul className='flex gap-4 items-center'>
           {isAuthenticated ? (
