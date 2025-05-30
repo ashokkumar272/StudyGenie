@@ -41,12 +41,12 @@ const MarkdownRenderer = ({ content, variant = "main" }) => {
       : "relative group my-4 w-full min-w-0";
     
     const preClasses = variant === "panel"
-      ? "bg-gray-800 text-white rounded-b-md text-sm font-mono p-4 overflow-x-auto w-full min-w-0 max-w-full scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800"
-      : "bg-gray-800 text-white rounded-b-md text-sm font-mono p-4 overflow-x-auto w-full min-w-0 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800";
+      ? "bg-gray-800 text-white rounded-b-md text-sm font-mono p-2 overflow-x-auto w-full min-w-0 max-w-full scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800"
+      : "bg-gray-800 text-white rounded-b-md text-sm font-mono p-2 overflow-x-auto w-full min-w-0 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800";
     
     return (
       <div className={containerClasses}>
-        <div className="flex items-center justify-between bg-gray-800 px-4 py-2 rounded-t-md">
+        <div className="flex items-center justify-between px-2 bg-gray-800 rounded-t-md">
           <span className="text-gray-300 text-sm font-medium truncate">
             {language || 'text'}
           </span>
@@ -85,7 +85,7 @@ const MarkdownRenderer = ({ content, variant = "main" }) => {
     }
       // Fallback for pre without code
     return (
-      <pre className="bg-gray-800 text-white p-4 rounded-md text-sm font-mono my-4 overflow-x-auto w-full min-w-0 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800" {...props}>
+      <pre className="bg-gray-800 text-white px-2 rounded-md text-sm font-mono my-2 overflow-x-auto w-full min-w-0 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800" {...props}>
         {children}
       </pre>
     );

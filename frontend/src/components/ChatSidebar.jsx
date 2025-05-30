@@ -31,12 +31,10 @@ const ChatSidebar = () => {
     if (!content) return 'New Conversation';
     return content.length > 40 ? content.substring(0, 40) + '...' : content;
   };
-  return (
-    <div className={`h-full bg-gray-100 border-r overflow-auto transition-all duration-300 ${
+  return (    <div className={`h-full bg-white shadow-lg overflow-auto transition-all duration-300 ${
       isCollapsed ? 'w-16' : 'w-64'
-    }`}>
-      {/* Toggle button */}
-      <div className="p-2 border-b bg-gray-50">
+    }`}>      {/* Toggle button */}
+      <div className="p-2 bg-indigo-50 shadow-sm">
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="w-full flex items-center justify-center p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-md transition-colors"

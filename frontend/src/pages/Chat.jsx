@@ -167,14 +167,13 @@ const Chat = () => {
   return (
     <div className="h-full"> {/* Fill available space without forcing scroll */}
       {/* Main container with fixed height and three sections */}
-      <div className="mx-auto h-full flex bg-white shadow-lg">
+      <div className="mx-auto h-full flex bg-gray-50 shadow-lg">
         {/* Chat history sidebar */}
         <ChatSidebar />          {/* Chat area with right panel layout */}
         <div className={`flex flex-1 chat-container ${isPanelOpen ? 'panel-open' : ''}`}>
           {/* Main chat area */}
-          <div className={`flex flex-col relative main-chat-area ${isPanelOpen ? 'panel-open' : ''}`}>
-            {/* Chat container - scrollable */}
-            <div className="flex-1 overflow-auto p-4">
+          <div className={`flex flex-col relative main-chat-area ${isPanelOpen ? 'panel-open' : ''}`}>            {/* Chat container - scrollable */}
+            <div className="flex-1 overflow-auto p-4 bg-white rounded-lg shadow-sm mx-2 my-2 transition-all duration-200 hover:shadow-md">
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
                   <h2 className="text-2xl font-bold mb-2">Welcome to AI Chatbot</h2>
@@ -196,11 +195,10 @@ const Chat = () => {
               )}
             </div>
             
-            {/* Input area - fixed at bottom */}            <div className="border-t p-4">
-              <div className="flex">
-                <button
+            {/* Input area - fixed at bottom */}            <div className="bg-white rounded-lg shadow-sm p-4 mx-2 mb-2 transition-all duration-200 hover:shadow-md">
+              <div className="flex">                <button
                   onClick={handleNewChat}
-                  className="mr-2 p-2 text-gray-500 hover:text-indigo-500 rounded-full"
+                  className="mr-2 p-2 text-gray-500 hover:text-indigo-500 hover:bg-indigo-50 rounded-full transition-all duration-200 hover:scale-105"
                   title="New chat"
                 >
                   <FiPlusCircle size={20} />
@@ -208,7 +206,7 @@ const Chat = () => {
                 
                 <button
                   onClick={handleClearChat}
-                  className="mr-2 p-2 text-gray-500 hover:text-red-500 rounded-full"
+                  className="mr-2 p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200 hover:scale-105"
                   title="Clear conversation"
                 >
                   <FiTrash2 size={20} />
@@ -216,26 +214,25 @@ const Chat = () => {
 
                 <button
                   onClick={() => setSummaryOpen(true)}
-                  className="mr-2 p-2 text-gray-500 hover:text-blue-500 rounded-full"
+                  className="mr-2 p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-transparent"
                   title="Chat summary"
                   disabled={!currentSessionId || messages.length === 0}
                 >
                   <FiFileText size={20} />
                 </button>
                 
-                <form onSubmit={handleSubmit} className="flex-1 flex">
-                  <input
+                <form onSubmit={handleSubmit} className="flex-1 flex">                  <input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type your message..."
-                    className="flex-1 border rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="flex-1 bg-white rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all duration-200 hover:shadow-md"
                     disabled={loading}
                   />
                   <button
                     type="submit"
                     disabled={loading || !newMessage.trim()}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-r-lg flex items-center justify-center disabled:opacity-50"
+                    className="bg-indigo-600 text-white px-4 py-2 rounded-r-lg flex items-center justify-center disabled:opacity-50 transition-all duration-200 hover:bg-indigo-700 hover:scale-105 disabled:hover:scale-100"
                   >
                     {loading ? (
                       <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin" />

@@ -84,9 +84,8 @@ ${summaryData.rawConversation}
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">        {/* Header */}
+        <div className="flex items-center justify-between p-4 bg-gray-50 shadow-sm rounded-t-lg">
           <div className="flex items-center gap-2">
             <FiFileText className="text-indigo-600" size={20} />
             <h2 className="text-lg font-semibold">Chat Summary</h2>
@@ -190,23 +189,19 @@ ${summaryData.rawConversation}
                     <ReactMarkdown>{summaryData.summary}</ReactMarkdown>
                   </div>
                 </div>
-              </div>
-
-              {/* Error fallback message */}
+              </div>              {/* Error fallback message */}
               {summaryData.error && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="bg-yellow-50 shadow-sm rounded-lg p-4">
                   <p className="text-yellow-800 font-medium">Note:</p>
                   <p className="text-yellow-700">{summaryData.error}</p>
                 </div>
-              )}
-
-              {/* Raw Conversation (collapsible) */}
+              )}              {/* Raw Conversation (collapsible) */}
               {summaryData.rawConversation && (
-                <details className="border rounded-lg">
+                <details className="shadow-sm rounded-lg bg-white">
                   <summary className="p-4 cursor-pointer hover:bg-gray-50 font-medium">
                     View Raw Formatted Conversation
                   </summary>
-                  <div className="p-4 border-t bg-gray-50">
+                  <div className="p-4 bg-gray-50 shadow-sm">
                     <pre className="whitespace-pre-wrap text-sm text-gray-700 max-h-96 overflow-auto">
                       {summaryData.rawConversation}
                     </pre>
@@ -215,15 +210,13 @@ ${summaryData.rawConversation}
               )}
 
               {/* Metadata */}
-              <div className="text-sm text-gray-500 border-t pt-4">
+              <div className="text-sm text-gray-500 bg-gray-50 shadow-sm rounded-lg pt-4 p-4 mt-4">
                 <p>Generated on {new Date(summaryData.generatedAt).toLocaleString()}</p>
               </div>
             </div>
           )}
-        </div>
-
-        {/* Footer */}
-        <div className="border-t p-4 flex justify-end">
+        </div>        {/* Footer */}
+        <div className="bg-gray-50 shadow-sm p-4 flex justify-end rounded-b-lg">
           <button
             onClick={onClose}
             className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"

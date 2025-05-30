@@ -554,15 +554,14 @@ const AskAboutThis = React.forwardRef(
               </div>
               {/* Input form */}
               <form onSubmit={handleModalSubmit} className="mt-auto flex">
-                {" "}
-                <input
+                {" "}                <input
                   ref={inputRef}
                   type="text"
                   value={followupQuestion}
                   onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
                   placeholder="Ask for clarification or follow-up questions..."
-                  className="flex-1 border rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="flex-1 bg-white shadow-sm rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required
                 />
                 <button
@@ -606,10 +605,9 @@ const AskAboutThis = React.forwardRef(
               </div>
 
               <form onSubmit={handleModalSubmit}>
-                {" "}
-                <textarea
+                {" "}                <textarea
                   ref={inputRef}
-                  className="w-full border border-gray-300 rounded-md p-2 mb-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full bg-white shadow-sm rounded-md p-2 mb-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   value={followupQuestion}
                   onChange={handleInputChange}
                   onKeyDown={handleKeyDown}

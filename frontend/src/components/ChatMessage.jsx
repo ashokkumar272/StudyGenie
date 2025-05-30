@@ -35,26 +35,26 @@ const ChatMessage = ({
     }
 
     return <p className="break-words overflow-wrap-anywhere">{message.content}</p>;
-  };  const getMessageClasses = () => {
-    if (variant === "main") {
-      // Use responsive max-width for main chat
-      const baseClasses = `max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl rounded-lg p-4 relative min-w-0 break-words overflow-hidden message-with-thread`;
-      return `${baseClasses} ${
-        message.role === "user"
-          ? "bg-indigo-600 text-white"
-          : "bg-white shadow-sm border"
-      } ${isLoading ? "opacity-60" : ""}`;
+  };  const getMessageClasses = () => {    if (variant === "main") {
+      // AI messages cover full width, user messages stay limited
+      if (message.role === "assistant") {
+        return `w-full rounded-lg p-4 relative min-w-0 break-words overflow-hidden message-with-thread bg-white shadow-sm transition-all duration-200 hover:shadow-md message-animation ${isLoading ? "opacity-60" : ""}`;
+      } else {
+        // User messages keep responsive max-width
+        const baseClasses = `max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl rounded-lg p-4 relative min-w-0 break-words overflow-hidden message-with-thread transition-all duration-200 hover:shadow-lg`;
+        return `${baseClasses} bg-indigo-600 text-white hover:bg-indigo-700 ${isLoading ? "opacity-60" : ""}`;
+      }
     }    // Panel variant - AI messages fill full width, user messages stay limited
     if (message.role === "assistant") {
       // AI messages fill the full width in panel
-      return `w-full rounded-lg p-3 relative min-w-0 break-words ${
+      return `w-full rounded-lg p-3 relative min-w-0 break-words transition-all duration-200 hover:shadow-md message-animation ${
         isError
-          ? "bg-red-50 border border-red-200"
-          : "bg-white shadow-sm border"
-      } ${isLoading ? "opacity-60" : ""}`;
+          ? "bg-red-50 shadow-sm hover:bg-red-100"
+          : "bg-white shadow-sm hover:bg-gray-50"
+      } ${isLoading ? "opacity-60 loading-pulse" : ""}`;
     } else {
       // User messages keep limited width in panel
-      return `max-w-xs sm:max-w-sm md:max-w-md rounded-lg p-3 relative min-w-0 break-words overflow-hidden bg-indigo-600 text-white ${isLoading ? "opacity-60" : ""}`;
+      return `max-w-xs sm:max-w-sm md:max-w-md rounded-lg p-3 relative min-w-0 break-words overflow-hidden bg-indigo-600 text-white transition-all duration-200 hover:bg-indigo-700 hover:shadow-lg message-animation ${isLoading ? "opacity-60" : ""}`;
     }
   };
 
