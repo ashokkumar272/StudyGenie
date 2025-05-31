@@ -336,31 +336,18 @@
 /* Thread icon styles */
 .thread-icon {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  padding: 6px;
-  border-radius: 6px;
-  background-color: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
-  transition: all 0.2s ease;
-  opacity: 0.9;
+  top: 8px;
+  right: 8px;
+  padding: 4px;
+  border-radius: 4px;
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10;
-}
-
-.thread-icon:hover {
-  opacity: 1;
-  background-color: rgba(79, 70, 229, 0.1);
-  transform: scale(1.15);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
-}
-
-.thread-icon:active {
-  transform: scale(1.1);
-  background-color: rgba(79, 70, 229, 0.2);
+  color: #6b7280;
 }
 
 /* Make message container relative for absolute positioning of thread icon */
@@ -368,35 +355,9 @@
   position: relative;
 }
 
-/* Add margin only for assistant messages with thread icons - but only add padding-right instead of margin-right for full width */
+/* Add padding for assistant messages with thread icons */
 .message-with-thread[data-role="assistant"] {
-  padding-right: 20px; /* Add padding for the thread icon instead of margin */
-}
-
-/* Subtle animation to draw attention to thread icon */
-@keyframes threadPulse {
-  0% {
-    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.15);
-  }
-  50% {
-    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.15), 0 0 0 4px rgba(79, 70, 229, 0.15);
-  }
-  100% {
-    box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.15);
-  }
-}
-
-.thread-icon {
-  animation: threadPulse 3s ease-in-out infinite;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 50%;
-  padding: 4px;
-}
-
-.thread-icon:hover {
-  background-color: rgba(79, 70, 229, 0.1);
-  transform: scale(1.1);
-  animation-duration: 1.5s;
+  padding-right: 32px; /* Add padding for the thread icon */
 }
 
 /* Selection list styles */
