@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ChatContext } from '../context/chatContext';
 import { AuthContext } from '../context/authContext';
-import ReactMarkdown from 'react-markdown';
+import MarkdownRenderer from '../components/MarkdownRenderer';
 import { FiFileText, FiDownload, FiArrowLeft, FiLoader, FiMessageSquare } from 'react-icons/fi';
 
 const SummaryPage = () => {
@@ -178,7 +178,7 @@ ${summaryData.rawConversation}
                 </div>
                 <div className="bg-gray-50 p-6 rounded-lg border">
                   <div className="prose max-w-none">
-                    <ReactMarkdown>{summaryData.summary}</ReactMarkdown>
+                    <MarkdownRenderer content={summaryData.summary} />
                   </div>
                 </div>
               </div>

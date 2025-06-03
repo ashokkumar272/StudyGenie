@@ -5,7 +5,7 @@ import { ChatContext } from '../context/chatContext';
 import { FiMessageSquare, FiPlusCircle, FiTrash2, FiChevronLeft, FiChevronRight, FiFileText } from 'react-icons/fi';
 
 const ChatSidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const navigate = useNavigate();
   const { 
     chatSessions, 

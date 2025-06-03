@@ -117,19 +117,18 @@ const MarkdownRenderer = ({ content, variant = "main" }) => {
             <p className="text-gray-700 mb-3 leading-relaxed" {...props}>
               {children}
             </p>
-          ),
-          ul: ({ children, ...props }) => (
-            <ul className="list-disc list-inside text-gray-700 mb-3 space-y-1" {...props}>
+          ),          ul: ({ children, ...props }) => (
+            <ul className="list-disc list-outside ml-6 text-gray-700 mb-3 space-y-2" {...props}>
               {children}
             </ul>
           ),
           ol: ({ children, ...props }) => (
-            <ol className="list-decimal list-inside text-gray-700 mb-3 space-y-1" {...props}>
+            <ol className="list-decimal list-outside ml-6 text-gray-700 mb-3 space-y-2" {...props}>
               {children}
             </ol>
           ),
           li: ({ children, ...props }) => (
-            <li className="text-gray-700" {...props}>
+            <li className="text-gray-700 leading-relaxed" {...props}>
               {children}
             </li>
           ),
@@ -147,8 +146,7 @@ const MarkdownRenderer = ({ content, variant = "main" }) => {
             <em className="italic text-gray-700" {...props}>
               {children}
             </em>
-          ),
-          a: ({ children, href, ...props }) => (
+          ),          a: ({ children, href, ...props }) => (
             <a 
               href={href} 
               className="text-blue-600 hover:text-blue-800 underline" 
@@ -158,6 +156,39 @@ const MarkdownRenderer = ({ content, variant = "main" }) => {
             >
               {children}
             </a>
+          ),
+          // Table components
+          table: ({ children, ...props }) => (
+            <div className="overflow-x-auto my-4">
+              <table className="min-w-full divide-y divide-gray-300 border border-gray-300 rounded-lg" {...props}>
+                {children}
+              </table>
+            </div>
+          ),
+          thead: ({ children, ...props }) => (
+            <thead className="bg-gray-50" {...props}>
+              {children}
+            </thead>
+          ),
+          tbody: ({ children, ...props }) => (
+            <tbody className="bg-white divide-y divide-gray-200" {...props}>
+              {children}
+            </tbody>
+          ),
+          tr: ({ children, ...props }) => (
+            <tr className="hover:bg-gray-50" {...props}>
+              {children}
+            </tr>
+          ),
+          th: ({ children, ...props }) => (
+            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-300" {...props}>
+              {children}
+            </th>
+          ),
+          td: ({ children, ...props }) => (
+            <td className="px-4 py-3 text-sm text-gray-900 border-b border-gray-200" {...props}>
+              {children}
+            </td>
           ),
         }}
       >

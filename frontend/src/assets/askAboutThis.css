@@ -1,3 +1,30 @@
+/* Base Classes */
+.base-shadow {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.base-panel {
+  background-color: #f8fafc;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.base-button {
+  background-color: #4f46e5;
+  color: white;
+  border-radius: 0.375rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border: none;
+}
+
+.base-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Core Layout */
 .selectable-text {
   position: relative;
   cursor: text;
@@ -6,10 +33,8 @@
 .selectable-text::selection {
   background-color: rgba(79, 70, 229, 0.3);
   color: inherit;
-  cursor: pointer;
 }
 
-/* Enhanced hover effects and animations */
 .ask-button {
   position: fixed;
   z-index: 50;
@@ -18,17 +43,9 @@
   border-radius: 9999px;
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
-}
-
-.ask-button:hover {
-  background-color: #4338ca;
-  transform: translate(0, -50%) scale(1.05) !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .ask-modal {
@@ -41,7 +58,7 @@
   background-color: rgba(0, 0, 0, 0.5);
 }
 
-/* Panel container that doesn't take space when empty */
+/* Container Layout - 50/50 Split */
 .ask-panel-container {
   min-width: 0;
   width: auto;
@@ -49,39 +66,36 @@
   display: flex;
 }
 
-/* Chat container - ensure proper 50/50 split when panel is open */
 .chat-container {
   min-width: 0;
 }
 
 .chat-container.panel-open {
-  width: 100% !important;
-  max-width: 100% !important;
-  min-width: 0 !important;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
-/* Panel container when panel is open - takes 50% width */
 .ask-panel-container.panel-open {
-  width: 50% !important;
-  flex: 0 0 50% !important;
-  max-width: 50% !important; /* Strictly enforce max width */
-  overflow: hidden !important; /* Prevent expanding beyond container */
+  width: 50%;
+  flex: 0 0 50%;
+  max-width: 50%;
+  overflow: hidden;
+  border-left: 1px solid #e5e7eb;
 }
 
-/* Main chat area should also be 50% when panel is open */
 .main-chat-area {
   flex: 1;
-  min-width: 0; /* Allow shrinking */
+  min-width: 0;
 }
 
 .main-chat-area.panel-open {
-  flex: 0 0 50% !important;
-  width: 50% !important;
-  max-width: 50% !important; /* Strictly enforce max width */
-  overflow: hidden !important; /* Prevent expanding beyond container */
+  flex: 0 0 50%;
+  width: 50%;
+  max-width: 50%;
+  overflow: hidden;
 }
 
-/* Center conversation when in full screen (no panel) with 70% width */
 .main-chat-area:not(.panel-open) {
   display: flex;
   flex-direction: column;
@@ -94,41 +108,22 @@
   max-width: 70%;
 }
 
-/* Right side panel styles */
+/* Panel Styles */
 .ask-about-this-panel {
   width: 100%;
   height: 100%;
   background-color: white;
-  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
   min-width: 0;
   max-width: 100%;
-  animation: slideInFromRight 0.3s ease-out;
-}
-
-@keyframes slideInFromRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
 }
 
 .ask-about-this-header {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   font-weight: 600;
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-  transition: all 0.2s ease;
-}
-
-.ask-about-this-header:hover {
-  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  background-color: #f8fafc;
 }
 
 .ask-about-this-content {
@@ -137,39 +132,31 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  min-width: 0; /* Allow shrinking */
-  overflow-x: visible; /* Allow horizontal scroll for nested content */
-  scroll-behavior: smooth;
+  min-width: 0;
+  overflow-x: visible;
 }
 
 .ask-about-this-footer {
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
   padding: 1rem;
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-  transition: all 0.2s ease;
+  background-color: #f8fafc;
 }
 
 .ask-about-this-input {
   width: 100%;
   resize: none;
   background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #d1d5db;
   border-radius: 0.375rem;
   padding: 0.5rem;
   margin-bottom: 0.5rem;
   min-height: 40px;
   max-height: 150px;
   overflow-y: auto;
-  transition: all 0.2s ease;
 }
 
 .ask-about-this-input:focus {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(79, 70, 229, 0.1);
-  outline: none;
-}
-
-.ask-about-this-input:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
 }
 
 .ask-about-this-button {
@@ -180,85 +167,32 @@
   font-weight: 500;
   cursor: pointer;
   width: 100%;
-  transition: all 0.2s ease;
-}
-
-.ask-about-this-button:hover {
-  background-color: #4338ca;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(67, 56, 202, 0.3);
-}
-
-.ask-about-this-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(67, 56, 202, 0.3);
+  border: none;
 }
 
 .ask-about-this-button:disabled {
   background-color: #9ca3af;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
 .ask-about-this-selection {
-  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  background-color: #f0f9ff;
   border-left: 4px solid #4f46e5;
   padding: 0.75rem;
   margin-bottom: 1rem;
   border-radius: 0.5rem;
   font-style: italic;
   color: #4b5563;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translate(0, -60%) scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: translate(0, -50%) scale(1);
-  }
+/* Prose and Content Styles */
+.prose {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  min-width: 0;
 }
 
-/* Panel animation */
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.ask-about-this-panel {
-  animation: slideIn 0.3s ease-out;
-}
-
-/* Add pulse animation to make the button more noticeable */
-@keyframes pulse {
-  0% {
-    transform: translate(0, -50%) scale(1);
-    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7);
-  }
-  70% {
-    transform: translate(0, -50%) scale(1.05);
-    box-shadow: 0 0 0 5px rgba(79, 70, 229, 0);
-  }
-  100% {
-    transform: translate(0, -50%) scale(1);
-    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
-  }
-}
-
-.ask-button {
-  animation: fadeIn 0.3s ease-out, pulse 1.5s infinite;
-}
-/* Additional styles for the side panel chatbox */
 .prose.prose-sm {
   font-size: 0.875rem;
   line-height: 1.5;
@@ -283,32 +217,49 @@
   border-radius: 0.375rem;
   padding: 0.75rem;
   overflow-x: auto;
-  min-width: 0; /* Allow shrinking */
-  max-width: 100%; /* Ensure it doesn't exceed parent */
+  min-width: 0;
+  max-width: 100%;
 }
 
+.prose code {
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+.prose pre {
+  white-space: pre;
+  overflow-x: auto;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.prose pre code {
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+/* Panel Code Block Styles */
 .ask-about-this-panel .prose.prose-sm pre code {
   background-color: transparent;
   padding: 0;
 }
 
-/* Specific styles for side panel code blocks */
 .ask-about-this-panel .prose pre {
-  overflow-x: auto !important;
-  white-space: pre !important;
-  word-wrap: normal !important;
-  word-break: normal !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
+  overflow-x: auto;
+  white-space: pre;
+  word-wrap: normal;
+  word-break: normal;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .ask-about-this-panel .prose pre code {
-  white-space: pre !important;
-  word-wrap: normal !important;
-  word-break: normal !important;
+  white-space: pre;
+  word-wrap: normal;
+  word-break: normal;
 }
 
-/* Ensure ChatMessage components in panel don't overflow */
 .ask-about-this-panel .prose {
   min-width: 0;
   max-width: 100%;
@@ -321,19 +272,22 @@
   color: #6b7280;
 }
 
-/* Message container */
+.ask-about-this-panel .prose * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Component Styles */
 .ask-about-this-content .flex.flex-col {
   min-height: 0;
   flex: 1;
   overflow-y: auto;
 }
 
-/* Input area at the bottom */
 .ask-about-this-content form {
   margin-top: auto;
 }
 
-/* Thread icon styles */
 .thread-icon {
   position: absolute;
   top: 8px;
@@ -350,35 +304,33 @@
   color: #6b7280;
 }
 
-/* Make message container relative for absolute positioning of thread icon */
 .message-with-thread {
   position: relative;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
-/* Add padding for assistant messages with thread icons */
 .message-with-thread[data-role="assistant"] {
-  padding-right: 32px; /* Add padding for the thread icon */
+  padding-right: 32px;
 }
 
-/* Selection list styles */
+.ask-about-this-panel .message-with-thread {
+  overflow: visible;
+}
+
+/* Selection Styles */
 .selection-list-container {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  background-color: #f8fafc;
 }
 
 .selection-item {
-  transition: all 0.15s ease-in-out;
   border-radius: 0.375rem;
   word-break: break-word;
 }
 
-.selection-item:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
-}
-
 .selection-item.active {
-  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+  border: 2px solid #4f46e5;
 }
 
 .selection-text {
@@ -391,11 +343,9 @@
   opacity: 0.7;
 }
 
-/* Chrome-like tabs for text selections */
 .selection-tabs {
   display: flex;
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background-color: #f8fafc;
   overflow-x: auto;
   scrollbar-width: thin;
 }
@@ -421,23 +371,12 @@
   max-width: 200px;
   margin-right: 2px;
   background-color: #f3f4f6;
-  transition: all 0.2s ease;
   cursor: pointer;
-  transform: translateY(0);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.selection-tab:hover {
-  background-color: #e5e7eb;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .selection-tab.active {
   background-color: white;
-  box-shadow: 0 -2px 8px rgba(79, 70, 229, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 1;
-  transform: translateY(-2px);
 }
 
 .selection-tab.active::before {
@@ -447,8 +386,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #4f46e5, #7c3aed);
-  border-radius: 2px 2px 0 0;
+  background-color: #4f46e5;
   z-index: 2;
 }
 
@@ -457,31 +395,6 @@
   padding: 8px 12px;
   min-width: 0;
   position: relative;
-}
-
-.selection-tab-content:hover::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #1f2937;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  white-space: nowrap;
-  z-index: 1000;
-  pointer-events: none;
-  opacity: 0;
-  animation: fadeIn 0.2s ease-in-out forwards;
-  margin-bottom: 4px;
-}
-
-@keyframes fadeIn {
-  to {
-    opacity: 1;
-  }
 }
 
 .selection-tab-text {
@@ -512,17 +425,7 @@
   margin-right: 4px;
   border-radius: 3px;
   color: #9ca3af;
-  transition: all 0.15s ease;
   flex-shrink: 0;
-}
-
-.selection-tab-close:hover {
-  background-color: #e5e7eb;
-  color: #6b7280;
-}
-
-.selection-tab.active .selection-tab-close:hover {
-  background-color: #f3f4f6;
 }
 
 .new-selection-tab {
@@ -538,13 +441,6 @@
   background-color: #f3f4f6;
   margin-left: 2px;
   color: #6b7280;
-  transition: all 0.15s ease;
-  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.05);
-}
-
-.panel-close-button:hover {
-  background-color: #e5e7eb;
-  color: #374151;
 }
 
 /* Responsive chat message styles */
@@ -573,18 +469,9 @@
   overflow-wrap: normal;
 }
 
-/* Custom scrollbar styles for code blocks */
+/* Scrollbar Styles */
 .scrollbar-thin {
   scrollbar-width: thin;
-}
-
-.scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
-  background-color: #4b5563;
-  border-radius: 0.25rem;
-}
-
-.scrollbar-track-gray-800::-webkit-scrollbar-track {
-  background-color: #1f2937;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -601,107 +488,60 @@
   background-color: #1f2937;
 }
 
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: #6b7280;
-}
-
-/* Enhanced styles for side panel code blocks */
 .ask-about-this-panel .scrollbar-thin::-webkit-scrollbar {
   height: 6px;
   width: 6px;
 }
 
-.ask-about-this-panel pre.scrollbar-thin {
-  scrollbar-width: thin !important;
-}
-
-/* Force code blocks in side panel to be scrollable */
+/* Code Block Panel Constraints */
 .ask-about-this-panel pre {
-  overflow-x: auto !important;
-  overflow-y: hidden !important;
-  white-space: pre !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  min-width: 0 !important;
-  box-sizing: border-box !important;
-}
-
-.ask-about-this-panel pre code {
-  white-space: pre !important;
-  word-break: keep-all !important;
-  overflow-wrap: normal !important;
-  word-wrap: normal !important;
-}
-
-/* Ensure code block divs in side panel don't expand beyond container */
-.ask-about-this-panel .relative.group.my-4 {
-  width: 100% !important;
-  max-width: 100% !important;
-  min-width: 0 !important;
-  overflow: hidden !important;
-  box-sizing: border-box !important;
-}
-
-/* Force the actual pre element to show scrollbar */
-.ask-about-this-panel .relative.group.my-4 pre {
-  overflow-x: auto !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-}
-
-/* Ensure the header doesn't expand */
-.ask-about-this-panel .relative.group.my-4 > div:first-child {
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  overflow: hidden !important;
-}
-
-/* Ensure message containers don't overflow */
-.message-with-thread {
-  max-width: 100%;
-  min-width: 0;
-  overflow: hidden;
-}
-
-/* Side panel message containers should allow horizontal scroll for code blocks */
-.ask-about-this-panel .message-with-thread {
-  overflow: visible;
-}
-
-/* Ensure code block containers in side panel can scroll */
-.ask-about-this-panel .prose > div {
-  min-width: 0;
-  overflow-x: visible;
-}
-
-/* Specific targeting for code block containers */
-.ask-about-this-panel .prose .relative.group {
-  min-width: 0;
-  overflow-x: visible;
-  width: 100%;
-  max-width: 100%;
-}
-
-/* Additional constraints for panel code blocks */
-.ask-about-this-panel .prose {
+  overflow-x: auto;
+  white-space: pre;
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  overflow-x: visible;
-}
-
-/* Ensure all child elements respect container width */
-.ask-about-this-panel .prose * {
-  max-width: 100%;
   box-sizing: border-box;
 }
 
-/* Mobile responsiveness improvements */
+.ask-about-this-panel pre code {
+  white-space: pre;
+  word-break: keep-all;
+}
+
+.ask-about-this-panel .relative.group.my-4 {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Focus States */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .ask-panel-container.panel-open {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 20;
+  }
+  
+  .main-chat-area.panel-open {
+    display: none;
+  }
+}
+
 @media (max-width: 640px) {
   .message-with-thread[data-role="user"] {
-    max-width: calc(100vw - 2rem) !important;
+    max-width: calc(100vw - 2rem);
   }
   
   .prose pre {
@@ -716,7 +556,7 @@
 
 @media (max-width: 480px) {
   .message-with-thread[data-role="user"] {
-    max-width: calc(100vw - 1rem) !important;
+    max-width: calc(100vw - 1rem);
   }
   
   .prose pre {
@@ -725,63 +565,51 @@
   }
 }
 
-/* Final enhancements for visual consistency */
-
-/* Gradient text for welcome message */
-.gradient-text {
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Table and List Styling for Markdown Rendering */
+.ask-about-this-panel table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
 }
 
-/* Enhanced focus states for accessibility */
-button:focus-visible,
-input:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid #4f46e5;
-  outline-offset: 2px;
+.ask-about-this-panel table th,
+.ask-about-this-panel table td {
+  text-align: left;
+  vertical-align: top;
 }
 
-/* Smooth page transitions */
-* {
-  scroll-behavior: smooth;
+.ask-about-this-panel ul,
+.ask-about-this-panel ol {
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
 }
 
-/* Enhanced container transitions */
-.chat-container,
-.main-chat-area,
-.ask-panel-container {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.ask-about-this-panel li {
+  margin: 0.25rem 0;
+  line-height: 1.6;
 }
 
-/* Loading state improvements */
-.loading-state {
-  opacity: 0.7;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
+.ask-about-this-panel ul li {
+  list-style-type: disc;
 }
 
-/* Enhanced shadows for depth */
-.elevated-shadow {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+.ask-about-this-panel ol li {
+  list-style-type: decimal;
 }
 
-.elevated-shadow:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+/* Nested lists */
+.ask-about-this-panel ul ul,
+.ask-about-this-panel ol ol,
+.ask-about-this-panel ul ol,
+.ask-about-this-panel ol ul {
+  margin: 0.25rem 0;
+  padding-left: 1rem;
 }
 
-/* Responsive improvements */
-@media (max-width: 768px) {
-  .ask-panel-container.panel-open {
-    width: 100% !important;
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
-    z-index: 20 !important;
-  }
-  
-  .main-chat-area.panel-open {
-    display: none !important;
-  }
+.ask-about-this-panel ul ul li {
+  list-style-type: circle;
+}
+
+.ask-about-this-panel ul ul ul li {
+  list-style-type: square;
 }

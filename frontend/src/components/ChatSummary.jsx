@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { ChatContext } from '../context/chatContext';
-import ReactMarkdown from 'react-markdown';
+import MarkdownRenderer from './MarkdownRenderer';
 import { FiFileText, FiDownload, FiX, FiLoader, FiShare2, FiExternalLink } from 'react-icons/fi';
 
 const ChatSummary = ({ sessionId, isOpen, onClose }) => {
@@ -186,7 +186,7 @@ ${summaryData.rawConversation}
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="prose max-w-none">
-                    <ReactMarkdown>{summaryData.summary}</ReactMarkdown>
+                    <MarkdownRenderer content={summaryData.summary} />
                   </div>
                 </div>
               </div>              {/* Error fallback message */}

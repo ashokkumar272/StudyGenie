@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import PropTypes from "prop-types";
-import ReactMarkdown from "react-markdown";
+import MarkdownRenderer from "./MarkdownRenderer";
 import { ChatContext } from "../context/chatContext";
 import ChatMessage from "./ChatMessage";
 import "../assets/askAboutThis.css";
