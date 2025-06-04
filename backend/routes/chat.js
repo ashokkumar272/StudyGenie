@@ -2,9 +2,22 @@ const express = require("express");
 const axios = require("axios");
 const mongoose = require("mongoose");
 const Message = require("../models/message");
+const Summary = require("../models/summary");
 const authMiddleware = require("../middleware/auth");
+const crypto = require("crypto");
 
 const router = express.Router();
+
+// Helper function to invalidate cached summaries when new messages are added
+const invalidateCachedSummary = async (userId, chatSessionId) => {
+  try {
+    await Summary.deleteOne({ userId, chatSessionId });
+    console.log(`Cached summary invalidated for session ${chatSessionId}`);
+  } catch (error) {
+    console.error("Error invalidating cached summary:", error);
+    // Don't throw error - summary invalidation shouldn't break message saving
+  }
+};
 
 // @route   POST /api/chat
 // @desc    Send message to AI and get response
@@ -27,7 +40,12 @@ router.post("/", authMiddleware, async (req, res) => {
       content,
       chatType: "main",
     });
-    await userMessage.save(); // Get the last 10 messages for this chat session for context
+    await userMessage.save();
+    
+    // Invalidate cached summary since new message was added
+    await invalidateCachedSummary(userId, sessionId);
+
+    // Get the last 10 messages for this chat session for context
     const messageHistory = await Message.find({
       userId,
       chatSessionId: sessionId,
@@ -81,10 +99,12 @@ router.post("/", authMiddleware, async (req, res) => {
       content:
         assistantResponse ||
         "Sorry, I could not generate a response. Please try again.",
-      chatType: "main",
-    });
+      chatType: "main",    });
 
     await assistantMessage.save();
+    
+    // Invalidate cached summary since new message was added
+    await invalidateCachedSummary(userId, sessionId);
 
     res.json({
       message: assistantResponse,
@@ -306,9 +326,11 @@ router.post("/followup", authMiddleware, async (req, res) => {
       role: "user",
       content: `Regarding: "${selectedText}" - ${userFollowupQuestion}`,
       selectedText,
-      fullAssistantMessage: originalAssistantMessage,
-    });
+      fullAssistantMessage: originalAssistantMessage,    });
     await userMessage.save();
+    
+    // Invalidate cached summary since new message was added
+    await invalidateCachedSummary(userId, chatSessionId);
 
     // Save the assistant response to DB
     const assistantMessage = new Message({
@@ -321,6 +343,9 @@ router.post("/followup", authMiddleware, async (req, res) => {
       replyToMessageId: userMessage._id,
     });
     await assistantMessage.save();
+    
+    // Invalidate cached summary again since assistant message was added
+    await invalidateCachedSummary(userId, chatSessionId);
 
     res.json({
       message: assistantResponse,
@@ -403,6 +428,9 @@ router.post("/side-thread", authMiddleware, async (req, res) => {
       selectedText: selectedText, // Always store selected text for identification
     });
     await userMessage.save();
+    
+    // Invalidate cached summary for main thread since new side message was added
+    await invalidateCachedSummary(userId, mainThreadId);
 
     // Prepare context for AI
     const contextMessages = [
@@ -471,11 +499,13 @@ router.post("/side-thread", authMiddleware, async (req, res) => {
         "Sorry, I could not generate a response. Please try again.",
       chatType: "side",
       mainThreadId,
-      linkedToMessageId,
-      selectedText: selectedText, // Store selected text for identification
+      linkedToMessageId,      selectedText: selectedText, // Store selected text for identification
       parentMessageId: userMessage._id,
     });
     await assistantMessage.save();
+    
+    // Invalidate cached summary for main thread since new side message was added
+    await invalidateCachedSummary(userId, mainThreadId);
 
     res.json({
       message: assistantResponse,
@@ -625,32 +655,74 @@ router.get("/side-threads/:mainThreadId", authMiddleware, async (req, res) => {
 });
 
 // @route   GET /api/chat/summary/:sessionId
-// @desc    Get summarized chat session including main and side threads
+// @desc    Get summarized chat session including main and side threads (cached)
 // @access  Private
 router.get("/summary/:sessionId", authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
     const { sessionId } = req.params;
 
-    // STEP 1: Fetch All Messages
-
-    // Fetch main messages
+    // STEP 1: Fetch All Messages to get current state
     const mainMessages = await Message.find({
       userId,
       chatSessionId: sessionId,
       chatType: "main",
     }).sort({ timestamp: 1 });
 
-    // Fetch side messages
     const sideMessages = await Message.find({
       userId,
       mainThreadId: sessionId,
       chatType: "side",
     }).sort({ timestamp: 1 });
 
-    // STEP 2: Group Side Messages by linkedToMessageId
-    const sideThreadsMap = new Map();
+    // Check if there are any messages at all
+    if (mainMessages.length === 0 && sideMessages.length === 0) {
+      return res.status(404).json({ message: "No messages found for this session" });
+    }
 
+    // Get the latest message timestamp from both main and side messages
+    const allMessages = [...mainMessages, ...sideMessages];
+    const latestMessageTimestamp = allMessages.reduce((latest, msg) => {
+      return new Date(msg.timestamp) > new Date(latest) ? msg.timestamp : latest;
+    }, allMessages[0].timestamp);
+
+    // Create content hash to detect changes
+    const contentForHash = allMessages
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+      .map(msg => `${msg.role}:${msg.content}:${msg.chatType}`)
+      .join('|');
+    const contentHash = crypto.createHash('sha256').update(contentForHash).digest('hex');
+
+    // STEP 2: Check if summary exists in database and is still valid
+    const existingSummary = await Summary.findOne({
+      userId,
+      chatSessionId: sessionId
+    });
+
+    if (existingSummary && 
+        existingSummary.contentHash === contentHash &&
+        new Date(existingSummary.lastMessageTimestamp) >= new Date(latestMessageTimestamp)) {
+      
+      console.log(`Returning cached summary for session ${sessionId}`);
+      
+      // Return cached summary
+      return res.json({
+        sessionId,
+        summary: existingSummary.summary,
+        totalMainMessages: existingSummary.totalMainMessages,
+        totalSideMessages: existingSummary.totalSideMessages,
+        mainThreadsWithSideThreads: existingSummary.mainThreadsWithSideThreads,
+        generatedAt: existingSummary.generatedAt.toISOString(),
+        rawConversation: existingSummary.rawConversation,
+        cached: true // Indicate this is from cache
+      });
+    }
+
+    console.log(`Generating new summary for session ${sessionId}`);
+
+    // STEP 3: Generate new summary if not cached or outdated
+    // Group Side Messages by linkedToMessageId
+    const sideThreadsMap = new Map();
     for (const sideMessage of sideMessages) {
       const key = sideMessage.linkedToMessageId.toString();
       if (!sideThreadsMap.has(key)) {
@@ -659,10 +731,10 @@ router.get("/summary/:sessionId", authMiddleware, async (req, res) => {
       sideThreadsMap.get(key).push(sideMessage);
     }
 
-    // STEP 3: Initialize Final Sequence
+    // Initialize Final Sequence
     const finalFormattedMessages = [];
 
-    // STEP 4: Combine Main + Side in Chronological Order with Labels
+    // Combine Main + Side in Chronological Order with Labels
     for (const mainMessage of mainMessages) {
       // Add Main User Message
       if (mainMessage.role === "user") {
@@ -686,10 +758,13 @@ router.get("/summary/:sessionId", authMiddleware, async (req, res) => {
       }
     }
 
-    // STEP 5: Join into One String (for Summarization Model)
+    // Join into One String (for Summarization Model)
     const inputToSummarizer = finalFormattedMessages.join("\n\n");
 
-    // STEP 6: Send to Summarizer AI (Gemini API)
+    // STEP 4: Send to Summarizer AI (Gemini API)
+    let summary;
+    let error = null;
+
     try {
       const summaryResponse = await axios.post(
         process.env.GEMINI_API_URL,
@@ -738,37 +813,77 @@ router.get("/summary/:sessionId", authMiddleware, async (req, res) => {
         }
       );
 
-      const summary = summaryResponse.data.candidates[0].content.parts[0].text;
-
-      // Return the summary along with metadata
-      res.json({
-        sessionId,
-        summary,
-        totalMainMessages: mainMessages.length,
-        totalSideMessages: sideMessages.length,
-        mainThreadsWithSideThreads: sideThreadsMap.size,
-        generatedAt: new Date().toISOString(),
-        rawConversation: inputToSummarizer, // Optional: include raw formatted conversation
-      });
+      summary = summaryResponse.data.candidates[0].content.parts[0].text;
     } catch (summaryError) {
       console.error("Summary generation error:", summaryError);
-
-      // Fallback: return formatted conversation without AI summary
-      res.json({
-        sessionId,
-        summary:
-          "Summary generation temporarily unavailable. Here's the formatted conversation:",
-        totalMainMessages: mainMessages.length,
-        totalSideMessages: sideMessages.length,
-        mainThreadsWithSideThreads: sideThreadsMap.size,
-        generatedAt: new Date().toISOString(),
-        rawConversation: inputToSummarizer,
-        error: "AI summarization failed, showing raw conversation",
-      });
+      summary = "Summary generation temporarily unavailable. Here's the formatted conversation:";
+      error = "AI summarization failed, showing raw conversation";
     }
+
+    // STEP 5: Save summary to database (replace existing one)
+    const summaryData = {
+      userId,
+      chatSessionId: sessionId,
+      summary,
+      totalMainMessages: mainMessages.length,
+      totalSideMessages: sideMessages.length,
+      mainThreadsWithSideThreads: sideThreadsMap.size,
+      rawConversation: inputToSummarizer,
+      generatedAt: new Date(),
+      lastMessageTimestamp: latestMessageTimestamp,
+      contentHash
+    };
+
+    try {
+      await Summary.findOneAndUpdate(
+        { userId, chatSessionId: sessionId },
+        summaryData,
+        { upsert: true, new: true }
+      );
+      console.log(`Summary saved to database for session ${sessionId}`);
+    } catch (saveError) {
+      console.error("Error saving summary to database:", saveError);
+      // Continue anyway - don't fail the request if saving fails
+    }
+
+    // STEP 6: Return the summary
+    const responseData = {
+      sessionId,
+      summary,
+      totalMainMessages: mainMessages.length,
+      totalSideMessages: sideMessages.length,
+      mainThreadsWithSideThreads: sideThreadsMap.size,
+      generatedAt: new Date().toISOString(),
+      rawConversation: inputToSummarizer,
+      cached: false // Indicate this is newly generated
+    };
+
+    if (error) {
+      responseData.error = error;
+    }
+
+    res.json(responseData);
+
   } catch (error) {
     console.error("Chat summary error:", error.message);
     res.status(500).json({ message: "Server error generating chat summary" });
+  }
+});
+
+// @route   DELETE /api/chat/summary/:sessionId
+// @desc    Invalidate cached summary for a session
+// @access  Private
+router.delete("/summary/:sessionId", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { sessionId } = req.params;
+
+    await invalidateCachedSummary(userId, sessionId);
+
+    res.json({ message: "Cached summary invalidated successfully" });
+  } catch (error) {
+    console.error("Summary invalidation error:", error.message);
+    res.status(500).json({ message: "Server error invalidating summary" });
   }
 });
 

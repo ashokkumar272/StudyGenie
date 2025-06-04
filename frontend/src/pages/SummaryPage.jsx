@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ChatContext } from '../context/chatContext';
 import { AuthContext } from '../context/authContext';
 import MarkdownRenderer from '../components/MarkdownRenderer';
+import { generateSummaryPDF } from '../utils/pdfGenerator';
 import { FiFileText, FiDownload, FiArrowLeft, FiLoader, FiMessageSquare } from 'react-icons/fi';
 
 const SummaryPage = () => {
@@ -10,9 +11,9 @@ const SummaryPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useContext(AuthContext);
   const { getChatSummary } = useContext(ChatContext);
-  
-  const [summaryData, setSummaryData] = useState(null);
+    const [summaryData, setSummaryData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState(null);
 
   // Redirect if not authenticated
@@ -49,41 +50,43 @@ const SummaryPage = () => {
     }
   };
 
-  const handleDownloadSummary = () => {
+  const handleForceRegenerate = async () => {
+    if (!sessionId) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // First invalidate the cached summary
+      await fetch(`/api/chat/summary/${sessionId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      
+      // Then generate a new summary
+      const data = await getChatSummary(sessionId);
+      setSummaryData(data);
+    } catch (err) {
+      setError('Failed to regenerate summary');
+      console.error('Regenerate summary error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownloadSummary = async () => {
     if (!summaryData) return;
-
-    const content = `
-Chat Summary
-============
-Session ID: ${summaryData.sessionId}
-Generated: ${new Date(summaryData.generatedAt).toLocaleString()}
-
-Summary:
---------
-${summaryData.summary}
-
-Statistics:
------------
-- Total Main Messages: ${summaryData.totalMainMessages}
-- Total Side Messages: ${summaryData.totalSideMessages}
-- Main Threads with Side Threads: ${summaryData.mainThreadsWithSideThreads}
-
-${summaryData.rawConversation ? `
-Raw Conversation:
------------------
-${summaryData.rawConversation}
-` : ''}
-    `;
-
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `chat-summary-${summaryData.sessionId}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    
+    try {
+      setDownloading(true);
+      await generateSummaryPDF(summaryData);
+    } catch (error) {
+      console.error('Download failed:', error);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   if (!isAuthenticated) {
@@ -167,13 +170,14 @@ ${summaryData.rawConversation}
               {/* AI Generated Summary */}
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-900">AI Generated Summary</h2>
-                  <button
+                  <h2 className="text-xl font-bold text-gray-900">AI Generated Summary</h2>                  <button
                     onClick={handleDownloadSummary}
-                    className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-lg transition-colors"
+                    disabled={downloading}
+                    className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-lg transition-colors"
+                    title="Download as PDF"
                   >
-                    <FiDownload size={16} />
-                    Download Summary
+                    <FiDownload size={16} className={downloading ? 'animate-bounce' : ''} />
+                    {downloading ? 'Generating PDF...' : 'Download PDF'}
                   </button>
                 </div>
                 <div className="bg-gray-50 p-6 rounded-lg border">
@@ -216,11 +220,32 @@ ${summaryData.rawConversation}
                     </div>
                   </details>
                 </div>
-              )}
-
-              {/* Metadata */}
+              )}              {/* Metadata */}
               <div className="text-sm text-gray-500 border-t pt-4">
-                <p>Summary generated on {new Date(summaryData.generatedAt).toLocaleString()}</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p>Summary generated on {new Date(summaryData.generatedAt).toLocaleString()}</p>
+                    {summaryData.cached && (
+                      <p className="mt-1 text-green-600 font-medium">
+                        ✓ Loaded from cache (instant result)
+                      </p>
+                    )}
+                    {summaryData.cached === false && (
+                      <p className="mt-1 text-blue-600 font-medium">
+                        🔄 Newly generated
+                      </p>
+                    )}
+                  </div>                  {summaryData.cached && (
+                    <button
+                      onClick={handleForceRegenerate}
+                      disabled={loading}
+                      className="px-3 py-1 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 rounded text-xs transition-colors"
+                      title="Force regenerate summary"
+                    >
+                      🔄 Regenerate
+                    </button>
+                  )}
+                </div>
                 <p className="mt-1">
                   Direct link: 
                   <code className="ml-2 bg-gray-100 px-2 py-1 rounded text-xs">

@@ -1,11 +1,13 @@
 import React, { useState, useContext } from 'react';
 import { ChatContext } from '../context/chatContext';
 import MarkdownRenderer from './MarkdownRenderer';
+import { generateSummaryPDF } from '../utils/pdfGenerator';
 import { FiFileText, FiDownload, FiX, FiLoader, FiShare2, FiExternalLink } from 'react-icons/fi';
 
 const ChatSummary = ({ sessionId, isOpen, onClose }) => {
   const { getChatSummary } = useContext(ChatContext);  const [summaryData, setSummaryData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState(null);
   const [copySuccess, setCopySuccess] = useState(false);
 
@@ -26,42 +28,17 @@ const ChatSummary = ({ sessionId, isOpen, onClose }) => {
     } finally {
       setLoading(false);
     }
-  };
-  const handleDownloadSummary = () => {
+  };  const handleDownloadSummary = async () => {
     if (!summaryData) return;
-
-    const content = `
-Chat Summary
-============
-Session ID: ${summaryData.sessionId}
-Generated: ${new Date(summaryData.generatedAt).toLocaleString()}
-
-Summary:
---------
-${summaryData.summary}
-
-Statistics:
------------
-- Total Main Messages: ${summaryData.totalMainMessages}
-- Total Side Messages: ${summaryData.totalSideMessages}
-- Main Threads with Side Threads: ${summaryData.mainThreadsWithSideThreads}
-
-${summaryData.rawConversation ? `
-Raw Conversation:
------------------
-${summaryData.rawConversation}
-` : ''}
-    `;
-
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `chat-summary-${summaryData.sessionId}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    
+    try {
+      setDownloading(true);
+      await generateSummaryPDF(summaryData);
+    } catch (error) {
+      console.error('Download failed:', error);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const handleCopyLink = async () => {
@@ -174,13 +151,14 @@ ${summaryData.rawConversation}
                     >
                       <FiExternalLink size={14} />
                       Open
-                    </button>
-                    <button
+                    </button>                    <button
                       onClick={handleDownloadSummary}
-                      className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-lg transition-colors text-sm"
+                      disabled={downloading}
+                      className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1 rounded-lg transition-colors text-sm"
+                      title="Download as PDF"
                     >
-                      <FiDownload size={14} />
-                      Download
+                      <FiDownload size={14} className={downloading ? 'animate-bounce' : ''} />
+                      {downloading ? 'Generating...' : 'Download PDF'}
                     </button>
                   </div>
                 </div>
@@ -207,11 +185,49 @@ ${summaryData.rawConversation}
                     </pre>
                   </div>
                 </details>
-              )}
-
-              {/* Metadata */}
+              )}              {/* Metadata */}
               <div className="text-sm text-gray-500 bg-gray-50 shadow-sm rounded-lg pt-4 p-4 mt-4">
-                <p>Generated on {new Date(summaryData.generatedAt).toLocaleString()}</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p>Generated on {new Date(summaryData.generatedAt).toLocaleString()}</p>
+                    {summaryData.cached && (
+                      <p className="mt-1 text-green-600 font-medium">
+                        ✓ Loaded from cache (instant result)
+                      </p>
+                    )}
+                    {summaryData.cached === false && (
+                      <p className="mt-1 text-blue-600 font-medium">
+                        🔄 Newly generated
+                      </p>
+                    )}
+                  </div>
+                  {summaryData.cached && (
+                    <button
+                      onClick={async () => {
+                        try {
+                          // Invalidate cache first
+                          await fetch(`/api/chat/summary/${sessionId}`, {
+                            method: 'DELETE',
+                            headers: {
+                              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                            },
+                          });
+                          // Clear current data and regenerate
+                          setSummaryData(null);
+                          handleGenerateSummary();
+                        } catch (error) {
+                          console.error('Error regenerating summary:', error);
+                          setError('Failed to regenerate summary');
+                        }
+                      }}
+                      disabled={loading}
+                      className="px-3 py-1 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 rounded text-xs transition-colors"
+                      title="Force regenerate summary"
+                    >
+                      🔄 Regenerate
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           )}
