@@ -4,8 +4,8 @@ import { AuthContext } from '../context/authContext';
 import { ChatContext } from '../context/chatContext';
 import ReactMarkdown from 'react-markdown';
 import { FiSend, FiTrash2, FiPlusCircle, FiFileText } from 'react-icons/fi';
-import ChatSidebar from '../components/ChatSidebar';
-import AskAboutThis from '../components/AskAboutThis';
+import ChatHistory from '../components/ChatHistory';
+import SideChat from '../components/SideChat';
 import ChatSummary from '../components/ChatSummary';
 import ChatMessage from '../components/ChatMessage';
 import ChatMessageList from '../components/ChatMessageList';
@@ -28,7 +28,7 @@ const Chat = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const messagesEndRef = useRef(null);
-  const askAboutThisRef = useRef(null);
+  const sideChatRef = useRef(null);
   const navigate = useNavigate();
   const { sessionId } = useParams();
   
@@ -87,7 +87,7 @@ const Chat = () => {
     return sideThreads.includes(messageId);
   };  // Handle thread icon click
   const handleThreadClick = async (message) => {
-    if (!askAboutThisRef.current || !currentSessionId) return;
+    if (!sideChatRef.current || !currentSessionId) return;
     
     try {
       // Fetch all existing selections for this parent message
@@ -104,7 +104,7 @@ const Chat = () => {
       const existingMessages = await fetchSideThreadMessages(currentSessionId, message._id, latestSelection.selectedText);
       
       // Open the side panel with existing messages
-      askAboutThisRef.current.openWithExistingThread({
+      sideChatRef.current.openWithExistingThread({
         messageId: message._id,
         content: message.content,
         selectedText: latestSelection.selectedText,
@@ -170,8 +170,9 @@ const Chat = () => {
     <div className="h-full"> {/* Fill available space without forcing scroll */}
       {/* Main container with fixed height and three sections */}
       <div className="mx-auto h-full flex bg-gray-50 shadow-lg">
+        {/* Chat history sidebar
         {/* Chat history sidebar */}
-        <ChatSidebar />          {/* Chat area with right panel layout */}
+        <ChatHistory />          {/* Chat area with right panel layout */}
         <div className={`flex flex-1 chat-container ${isPanelOpen ? 'panel-open' : ''}`}>
           {/* Main chat area */}
           <div className={`flex flex-col relative main-chat-area ${isPanelOpen ? 'panel-open' : ''}`}>            {/* Chat container - scrollable */}
@@ -228,8 +229,8 @@ const Chat = () => {
               </div>
             </div>
           </div>          {/* Empty container for the right panel that becomes visible when needed */}
-          <div className={`ask-panel-container ${isPanelOpen ? 'panel-open' : ''}`}>            <AskAboutThis 
-              ref={askAboutThisRef}
+          <div className={`ask-panel-container ${isPanelOpen ? 'panel-open' : ''}`}>            <SideChat 
+              ref={sideChatRef}
               onSubmit={handleFollowupSubmit} 
               isPanel={true} 
               onPanelStateChange={handlePanelStateChange}

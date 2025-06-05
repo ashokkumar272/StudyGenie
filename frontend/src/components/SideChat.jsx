@@ -7,7 +7,7 @@ import ChatMessageList from "./ChatMessageList";
 import ChatInput from "./ChatInput";
 import "../assets/askAboutThis.css";
 
-const AskAboutThis = React.forwardRef(
+const SideChat = React.forwardRef(
   ({ onSubmit, isPanel = false, onPanelStateChange }, ref) => {
     const {
       currentSessionId,
@@ -586,10 +586,10 @@ const AskAboutThis = React.forwardRef(
   }
 );
 
-AskAboutThis.propTypes = {
+SideChat.propTypes = {
   onSubmit: PropTypes.func.isRequired,
   isPanel: PropTypes.bool,
   onPanelStateChange: PropTypes.func,
 };
 
-export default AskAboutThis;
+export default SideChat;

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChatContext } from '../context/chatContext';
 import { FiMessageSquare, FiPlusCircle, FiTrash2, FiChevronLeft, FiChevronRight, FiFileText } from 'react-icons/fi';
 
-const ChatSidebar = () => {
+const ChatHistory = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const navigate = useNavigate();
   const { 
@@ -136,4 +136,4 @@ const ChatSidebar = () => {
   );
 };
 
-export default ChatSidebar;
+export default ChatHistory;
