@@ -8,6 +8,8 @@ import ChatSidebar from '../components/ChatSidebar';
 import AskAboutThis from '../components/AskAboutThis';
 import ChatSummary from '../components/ChatSummary';
 import ChatMessage from '../components/ChatMessage';
+import ChatMessageList from '../components/ChatMessageList';
+import ChatInput from '../components/ChatInput';
 
 const Chat = () => {
   const { isAuthenticated, user, logout } = useContext(AuthContext);  const { 
@@ -173,74 +175,56 @@ const Chat = () => {
         <div className={`flex flex-1 chat-container ${isPanelOpen ? 'panel-open' : ''}`}>
           {/* Main chat area */}
           <div className={`flex flex-col relative main-chat-area ${isPanelOpen ? 'panel-open' : ''}`}>            {/* Chat container - scrollable */}
-            <div className="flex-1 overflow-auto p-4 bg-white rounded-lg shadow-sm mx-2 my-2 transition-all duration-200 hover:shadow-md">
+            <div className="flex-1 overflow-auto p-4 bg-white rounded-lg shadow-sm mx-2 transition-all duration-200 hover:shadow-md">
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
                   <h2 className="text-2xl font-bold mb-2">Welcome to AI Chatbot</h2>
                   <p className="mb-6">Ask me anything and I'll do my best to help!</p>
                 </div>
-              ) : (                <div className="space-y-4">
-                  {messages.map((msg, index) => (
-                    <ChatMessage
-                      key={msg._id || index}
-                      message={msg}
-                      onThreadClick={handleThreadClick}
-                      hasThreads={hasThreads(msg._id)}
-                      showThreadIcon={true}
-                      variant="main"
-                    />
-                  ))}
-                  <div ref={messagesEndRef} />
-                </div>
+              ) : (
+                <ChatMessageList
+                  messages={messages}
+                  onThreadClick={handleThreadClick}
+                  hasThreads={hasThreads}
+                  showThreadIcon={true}
+                  variant="main"
+                />
               )}
+              <div ref={messagesEndRef} />
             </div>
-            
-            {/* Input area - fixed at bottom */}            <div className="bg-white rounded-lg shadow-sm p-4 mx-2 mb-2 transition-all duration-200 hover:shadow-md">
-              <div className="flex">                <button
+            {/* Input area - fixed at bottom */}            <div className={`bg-white border-t shadow-sm p-3 mx-2 transition-all duration-200 hover:shadow-md ${isPanelOpen ? '' : 'rounded-b-lg'}`}>
+              <div className="flex items-center gap-2 w-full">
+                <button
                   onClick={handleNewChat}
-                  className="mr-2 p-2 text-gray-500 hover:text-indigo-500 hover:bg-indigo-50 rounded-full transition-all duration-200 hover:scale-105"
+                  className="p-2 text-gray-500 hover:text-indigo-500 hover:bg-indigo-50 rounded-full transition-all duration-200 hover:scale-105"
                   title="New chat"
                 >
                   <FiPlusCircle size={20} />
                 </button>
-                
                 <button
                   onClick={handleClearChat}
-                  className="mr-2 p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200 hover:scale-105"
+                  className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200 hover:scale-105"
                   title="Clear conversation"
                 >
                   <FiTrash2 size={20} />
                 </button>
-
                 <button
                   onClick={() => setSummaryOpen(true)}
-                  className="mr-2 p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-transparent"
+                  className="p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-transparent"
                   title="Chat summary"
                   disabled={!currentSessionId || messages.length === 0}
                 >
                   <FiFileText size={20} />
                 </button>
-                
-                <form onSubmit={handleSubmit} className="flex-1 flex">                  <input
-                    type="text"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type your message..."
-                    className="flex-1 bg-white rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all duration-200 hover:shadow-md"
-                    disabled={loading}
-                  />
-                  <button
-                    type="submit"
-                    disabled={loading || !newMessage.trim()}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-r-lg flex items-center justify-center disabled:opacity-50 transition-all duration-200 hover:bg-indigo-700 hover:scale-105 disabled:hover:scale-100"
-                  >
-                    {loading ? (
-                      <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin" />
-                    ) : (
-                      <FiSend size={20} />
-                    )}
-                  </button>
-                </form>
+                <ChatInput
+                  value={newMessage}
+                  onChange={e => setNewMessage(e.target.value)}
+                  onSubmit={handleSubmit}
+                  loading={loading}
+                  disabled={false}
+                  placeholder="Type your message..."
+                  className="flex-1 min-w-0"
+                />
               </div>
             </div>
           </div>          {/* Empty container for the right panel that becomes visible when needed */}

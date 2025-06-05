@@ -108,6 +108,12 @@
   max-width: 70%;
 }
 
+/* Input area should use full width when panel is closed */
+.main-chat-area:not(.panel-open) > .bg-white.border-t.shadow-sm {
+  width: 70%;
+  max-width: 70%;
+}
+
 /* Panel Styles */
 .ask-about-this-panel {
   width: 100%;

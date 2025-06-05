@@ -3,6 +3,8 @@ import PropTypes from "prop-types";
 import MarkdownRenderer from "./MarkdownRenderer";
 import { ChatContext } from "../context/chatContext";
 import ChatMessage from "./ChatMessage";
+import ChatMessageList from "./ChatMessageList";
+import ChatInput from "./ChatInput";
 import "../assets/askAboutThis.css";
 
 const AskAboutThis = React.forwardRef(
@@ -443,7 +445,7 @@ const AskAboutThis = React.forwardRef(
           </div>
         )}        {/* Side panel - only show when button is clicked in panel mode */}
         {isPanel && isPanelOpen && (
-          <div className="ask-about-this-panel">            {/* Header with Chrome-like tabs */}
+          <div className="ask-about-this-panel flex flex-col h-full">            {/* Header with Chrome-like tabs */}
             <div className="ask-about-this-header p-0">
               {/* Tab bar - show all text selections as tabs */}
               <div className="selection-tabs">
@@ -505,86 +507,31 @@ const AskAboutThis = React.forwardRef(
                 </button>
               </div>
             </div>
-            <div className="ask-about-this-content">
+            <div className="ask-about-this-content flex-1 flex flex-col overflow-auto min-h-0">
               {/* Only show selection on first load */}
               {selection && panelMessages.length === 0 && (
                 <div className="ask-about-this-selection">
                   "{selection.text}"
                 </div>
               )}              {/* Messages container */}
-              <div className="flex flex-col space-y-4 mb-4">
-                {panelMessages.length > 0 ? (                  panelMessages.map((msg) => (
-                    <ChatMessage
-                      key={msg.id}
-                      message={msg}
-                      isLoading={msg.isLoading}
-                      isError={msg.isError}
-                      variant="panel"
-                    />
-                  ))
-                ) : (
-                  <div className="text-center py-6 flex flex-col items-center">
-                    <div className="bg-gray-100 rounded-full p-4 mb-3">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="text-indigo-500"
-                      >
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="8" x2="12" y2="16"></line>
-                        <line x1="8" y1="12" x2="16" y2="12"></line>
-                      </svg>
-                    </div>
-                    <p className="text-gray-700 font-medium mb-1">
-                      Start a conversation
-                    </p>
-                    <p className="text-gray-500 text-sm text-center max-w-[200px]">
-                      Ask a follow-up question about the selected text
-                    </p>
-                  </div>
-                )}
+              <div className="flex-1 overflow-auto min-h-0">
+                <ChatMessageList
+                  messages={panelMessages}
+                  variant="panel"
+                />
                 <div ref={messagesEndRef} />
               </div>
-              {/* Input form */}
-              <form onSubmit={handleModalSubmit} className="mt-auto flex">
-                {" "}                <input
-                  ref={inputRef}
-                  type="text"
+              {/* Input form fixed at bottom */}
+              <div className="pt-2 border-t bg-white sticky bottom-0 z-10">
+                <ChatInput
                   value={followupQuestion}
                   onChange={handleInputChange}
-                  onKeyDown={handleKeyDown}
+                  onSubmit={handleModalSubmit}
+                  loading={false}
+                  disabled={!selection}
                   placeholder="Ask for clarification or follow-up questions..."
-                  className="flex-1 bg-white shadow-sm rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
                 />
-                <button
-                  type="submit"
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-r-lg flex items-center justify-center disabled:opacity-50"
-                  disabled={!selection || !followupQuestion.trim()}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                  </svg>
-                </button>
-              </form>
+              </div>
             </div>
           </div>
         )}
