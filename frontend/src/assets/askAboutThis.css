@@ -353,21 +353,37 @@
   display: flex;
   background-color: #f8fafc;
   overflow-x: auto;
-  scrollbar-width: thin;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  flex-wrap: nowrap;
+  scrollbar-width: thin; /* For Firefox */
+  scrollbar-color: #cbd5e1 transparent; /* Light scrollbar for Firefox */
 }
 
+/* Always show thin scrollbar (WebKit) */
 .selection-tabs::-webkit-scrollbar {
-  height: 4px;
+  height: 6px;
+}
+
+/* Show thicker scrollbar on hover (WebKit) */
+.selection-tabs:hover::-webkit-scrollbar {
+  height: 8px;
 }
 
 .selection-tabs::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: transparent;
 }
 
 .selection-tabs::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 2px;
+  background-color: #cbd5e1;
+  border-radius: 0px;
 }
+
+/* Hide scrollbar buttons (WebKit) */
+.selection-tabs::-webkit-scrollbar-button {
+  display: none;
+}
+
 
 .selection-tab {
   position: relative;
@@ -378,6 +394,7 @@
   margin-right: 2px;
   background-color: #f3f4f6;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .selection-tab.active {
@@ -391,7 +408,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 1px;
   background-color: #4f46e5;
   z-index: 2;
 }
@@ -440,13 +457,17 @@
   padding: 8px 12px;
   font-size: 11px;
   color: #6b7280;
+  /* Prevent new selection tab from shrinking */
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .panel-close-button {
   padding: 8px;
-  background-color: #f3f4f6;
-  margin-left: 2px;
-  color: #6b7280;
+  background-color: red;
+  color: white;
+  border: 1px solid black;
+
 }
 
 /* Responsive chat message styles */

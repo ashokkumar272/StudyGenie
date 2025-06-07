@@ -23,12 +23,12 @@ const SideChat = React.forwardRef(
     const [panelMessages, setPanelMessages] = useState([]);
     const [sideThreadId, setSideThreadId] = useState(null);
     const [sideThreadSelections, setSideThreadSelections] = useState([]); // All selections for current parent
-    const [currentSelectionHash, setCurrentSelectionHash] = useState(null);
-    const modalRef = useRef(null);
+    const [currentSelectionHash, setCurrentSelectionHash] = useState(null);    const modalRef = useRef(null);
     const buttonRef = useRef(null);
     const savedSelection = useRef(null);
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
+    const selectionTabsRef = useRef(null);
 
     // Simple hash function to match backend
     const simpleHash = (str) => {
@@ -390,9 +390,7 @@ const SideChat = React.forwardRef(
     React.useImperativeHandle(ref, () => ({
       openWithExistingThread,
       isPanelOpen,
-    }));
-
-    // Add event listeners
+    }));    // Add event listeners
     useEffect(() => {
       document.addEventListener("selectionchange", handleTextSelection);
       document.addEventListener("mousedown", handleClickOutside);
@@ -401,6 +399,27 @@ const SideChat = React.forwardRef(
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }, []);
+
+    // Add horizontal scrolling with mouse wheel for selection tabs
+    useEffect(() => {
+      const selectionTabsElement = selectionTabsRef.current;
+      
+      const handleWheelScroll = (e) => {
+        // Only handle horizontal scrolling when mouse wheel is used
+        if (e.deltaY !== 0) {
+          e.preventDefault();
+          // Convert vertical scroll to horizontal scroll
+          selectionTabsElement.scrollLeft += e.deltaY;
+        }
+      };
+
+      if (selectionTabsElement) {
+        selectionTabsElement.addEventListener('wheel', handleWheelScroll, { passive: false });
+        return () => {
+          selectionTabsElement.removeEventListener('wheel', handleWheelScroll);
+        };
+      }
+    }, [isPanelOpen, sideThreadSelections]);
 
     // Close a specific text selection tab
     const closeSelectionTab = async (selectionHash, event) => {
@@ -447,10 +466,9 @@ const SideChat = React.forwardRef(
         {isPanel && isPanelOpen && (
           <div className="ask-about-this-panel flex flex-col h-full">            {/* Header with Chrome-like tabs */}
             <div className="ask-about-this-header p-0">
-              {/* Tab bar - show all text selections as tabs */}
-              <div className="selection-tabs">
-                {/* Tabs container */}
-                <div className="flex flex-1 min-w-0">
+              {/* Tab bar container with fixed close button */}              <div className="flex">
+                {/* Scrollable tabs container */}
+                <div ref={selectionTabsRef} className="selection-tabs flex-1 min-w-0">
                   {sideThreadSelections.length > 0 ? (
                     sideThreadSelections.map((selectionData, index) => (
                       <div
@@ -496,14 +514,14 @@ const SideChat = React.forwardRef(
                   )}
                 </div>
                 
-                {/* Close panel button */}
+                {/* Fixed close panel button */}
                 <button
                   onClick={closePanel}
-                  className="panel-close-button"
+                  className="panel-close-button flex-shrink-0"
                 >
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8 6.586L12.293 2.293a1 1 0 111.414 1.414L9.414 8l3.293 3.293a1 1 0 01-1.414 1.414L8 9.414l-3.293 3.293a1 1 0 01-1.414-1.414L6.586 8 2.293 3.707a1 1 0 011.414-1.414L8 6.586z"/>
-                  </svg>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                              <path d="M6 4.586L9.293 1.293a1 1 0 111.414 1.414L7.414 6l3.293 3.293a1 1 0 01-1.414 1.414L6 7.414l-3.293 3.293a1 1 0 01-1.414-1.414L4.586 6 1.293 2.707a1 1 0 011.414-1.414L6 4.586z"/>
+                            </svg>
                 </button>
               </div>
             </div>
