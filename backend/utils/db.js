@@ -1,6 +1,15 @@
 const mongoose = require("mongoose");
 
-const Connection = mongoose.connect('mongodb://0.0.0.0/chatbot')
+// Ensure environment variables are loaded
+require('dotenv').config();
+
+// Check if MONGODB_URI is defined
+if (!process.env.MONGODB_URI) {
+    console.error("MONGODB_URI environment variable is not defined");
+    process.exit(1);
+}
+
+const Connection = mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
         console.log("DB connected");
     })
