@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ChatContext } from '../context/chatContext';
 import { AuthContext } from '../context/authContext';
 import MarkdownRenderer from '../components/MarkdownRenderer';
-import { generateSummaryPDF } from '../utils/pdfGenerator';
+import { generateSummaryPDFLazy } from '../utils/pdfLazyLoader';
 import { FiFileText, FiDownload, FiArrowLeft, FiLoader, FiMessageSquare } from 'react-icons/fi';
 
 const SummaryPage = () => {
@@ -75,13 +75,12 @@ const SummaryPage = () => {
       setLoading(false);
     }
   };
-
   const handleDownloadSummary = async () => {
     if (!summaryData) return;
     
     try {
       setDownloading(true);
-      await generateSummaryPDF(summaryData);
+      await generateSummaryPDFLazy(summaryData);
     } catch (error) {
       console.error('Download failed:', error);
     } finally {

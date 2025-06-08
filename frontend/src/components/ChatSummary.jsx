@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { ChatContext } from '../context/chatContext';
 import MarkdownRenderer from './MarkdownRenderer';
-import { generateSummaryPDF } from '../utils/pdfGenerator';
+import { generateSummaryPDFLazy } from '../utils/pdfLazyLoader';
 import { FiFileText, FiDownload, FiX, FiLoader, FiShare2, FiExternalLink } from 'react-icons/fi';
 
 const ChatSummary = ({ sessionId, isOpen, onClose }) => {
@@ -33,7 +33,7 @@ const ChatSummary = ({ sessionId, isOpen, onClose }) => {
     
     try {
       setDownloading(true);
-      await generateSummaryPDF(summaryData);
+      await generateSummaryPDFLazy(summaryData);
     } catch (error) {
       console.error('Download failed:', error);
     } finally {

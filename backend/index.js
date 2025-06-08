@@ -7,6 +7,7 @@ const Connection = require('./utils/db');
 const authRoutes = require('./routes/auth');
 const chatRoutes = require('./routes/chat');
 const adminRoutes = require('./routes/admin');
+const path = require('path')
 
 // Load environment variables
 dotenv.config();
@@ -23,15 +24,35 @@ app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/admin', adminRoutes);
 
-app.get('/', (req, res) => {
-  res.send("Server Running");
+//-------------------deployement-----------------------
+
+const __dirname1 = path.resolve();
+if(process.env.NODE_ENV === 'production'){
+  app.use(express.static(path.join(__dirname1, "frontend/dist")));
+  app.get('*',(req,res)=>{
+    res.sendFile(path.resolve(__dirname1, "frontend", "dist", "index.html"));
+  });
+} else {
+  app.get("/", (req,res)=>{
+    res.send("API is running successfully");
+  });
+}
+
+//-------------------deployement-----------------------
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', message: 'Server is running' });
 });
 
 // Socket.io setup for real-time communication
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    methods: ["GET", "POST"]
+    origin: process.env.NODE_ENV === 'production' 
+      ? process.env.FRONTEND_URL || true 
+      : "http://localhost:5173",
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
