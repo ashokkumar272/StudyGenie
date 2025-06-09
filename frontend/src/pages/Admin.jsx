@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/authContext';
 import { ChatContext } from '../context/chatContext';
-import axios from 'axios';
+import api from '../utils/api';
 
 const Admin = () => {
   const { isAuthenticated, user } = useContext(AuthContext);
@@ -28,11 +28,11 @@ const Admin = () => {
       setLoading(true);
       
       // Fetch stats
-      const statsRes = await axios.get('/api/admin/stats');
+      const statsRes = await api.get('/api/admin/stats');
       setStats(statsRes.data);
       
       // Fetch users
-      const usersRes = await axios.get('/api/admin/users');
+      const usersRes = await api.get('/api/admin/users');
       setUsers(usersRes.data);
     } catch (err) {
       console.error('Admin data fetch error:', err);
@@ -63,7 +63,7 @@ const Admin = () => {
     }
     
     try {
-      await axios.delete(`/api/admin/users/${userId}`);
+      await api.delete(`/api/admin/users/${userId}`);
       setUsers(users.filter(user => user._id !== userId));
     } catch (err) {
       console.error('Delete user error:', err);
@@ -77,7 +77,7 @@ const Admin = () => {
     }
     
     try {
-      await axios.delete(`/api/admin/messages/${userId}`);
+      await api.delete(`/api/admin/messages/${userId}`);
       alert('Messages cleared successfully');
     } catch (err) {
       console.error('Clear messages error:', err);

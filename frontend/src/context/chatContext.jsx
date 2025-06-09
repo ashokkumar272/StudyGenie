@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { AuthContext } from './authContext';
 
 export const ChatContext = createContext();
@@ -26,7 +26,7 @@ export const ChatProvider = ({ children }) => {
   const fetchChatSessions = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/chat/sessions');
+      const res = await api.get('/api/chat/sessions');
       
       if (!res.data) {
         throw new Error('Invalid response from server');
@@ -68,7 +68,7 @@ export const ChatProvider = ({ children }) => {
     
     try {
       setLoading(true);
-      const res = await axios.get(`/api/chat/session/${sessionId}`);
+      const res = await api.get(`/api/chat/session/${sessionId}`);
       
       if (!res.data) {
         throw new Error('Invalid response from server');
@@ -92,7 +92,7 @@ export const ChatProvider = ({ children }) => {
   // Fetch side threads for a main thread
   const fetchSideThreads = async (mainThreadId) => {
     try {
-      const res = await axios.get(`/api/chat/side-threads/${mainThreadId}`);
+      const res = await api.get(`/api/chat/side-threads/${mainThreadId}`);
       setSideThreads(res.data || []);
     } catch (err) {
       console.error('Fetch side threads error:', err);
@@ -120,7 +120,7 @@ export const ChatProvider = ({ children }) => {
         url += `/${hash}`;
       }
       
-      const res = await axios.get(url);
+      const res = await api.get(url);
       return res.data || [];
     } catch (err) {
       console.error('Fetch side thread messages error:', err);
@@ -131,7 +131,7 @@ export const ChatProvider = ({ children }) => {
   // Fetch all unique text selections that have side threads for a specific message
   const fetchSideThreadSelections = async (mainThreadId, linkedToMessageId) => {
     try {
-      const res = await axios.get(`/api/chat/side-thread-selections/${mainThreadId}/${linkedToMessageId}`);
+      const res = await api.get(`/api/chat/side-thread-selections/${mainThreadId}/${linkedToMessageId}`);
       return res.data || [];
     } catch (err) {
       console.error('Fetch side thread selections error:', err);
@@ -143,7 +143,7 @@ export const ChatProvider = ({ children }) => {
   const fetchChatHistory = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('/api/chat/history');
+      const res = await api.get('/api/chat/history');
       setMessages(res.data);
     } catch (err) {
       console.error('Fetch chat history error:', err);
@@ -180,7 +180,7 @@ export const ChatProvider = ({ children }) => {
       
       setMessages((prev) => [...prev, userMessage]);
         // Send to API
-      const res = await axios.post('/api/chat', { 
+      const res = await api.post('/api/chat', { 
         content, 
         chatSessionId: sessionId 
       });
@@ -216,7 +216,7 @@ export const ChatProvider = ({ children }) => {
   const clearChatHistory = async () => {
     try {
       setLoading(true);
-      await axios.delete('/api/chat/history');
+      await api.delete('/api/chat/history');
       setMessages([]);
       setChatSessions([]);
       setCurrentSessionId(null);
@@ -238,7 +238,7 @@ export const ChatProvider = ({ children }) => {
     
     try {
       setLoading(true);
-      await axios.delete(`/api/chat/session/${sessionId}`);
+      await api.delete(`/api/chat/session/${sessionId}`);
       
       // Update sessions list
       setChatSessions(prev => prev.filter(session => session._id !== sessionId));
@@ -328,7 +328,7 @@ export const ChatProvider = ({ children }) => {
       
       try {
         // Send to API
-        const res = await axios.post('/api/chat/followup', { 
+        const res = await api.post('/api/chat/followup', { 
           selectedText, 
           originalAssistantMessage, 
           userFollowupQuestion,
@@ -393,7 +393,7 @@ export const ChatProvider = ({ children }) => {
         throw new Error('Missing required information for side thread');
       }
       
-      const res = await axios.post('/api/chat/side-thread', {
+      const res = await api.post('/api/chat/side-thread', {
         mainThreadId,
         linkedToMessageId,
         selectedText,
@@ -426,7 +426,7 @@ export const ChatProvider = ({ children }) => {
       }
       
       setLoading(true);
-      const res = await axios.get(`/api/chat/summary/${sessionId}`);
+      const res = await api.get(`/api/chat/summary/${sessionId}`);
       
       if (!res.data) {
         throw new Error('Invalid response from server');

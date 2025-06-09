@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/authContext';
 import { ChatContext } from '../context/chatContext';
 import { Link, useNavigate } from 'react-router-dom';
+import api from '../utils/api';
 
 const Login = () => {
   const { login, error, clearError, loading } = useContext(AuthContext);

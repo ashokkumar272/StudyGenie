@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 
 export const AuthContext = createContext();
 
@@ -10,15 +10,12 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Setup axios defaults
-  axios.defaults.baseURL = 'http://localhost:5000';
-
   // Set auth token
   useEffect(() => {
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     } else {
-      delete axios.defaults.headers.common['Authorization'];
+      delete api.defaults.headers.common['Authorization'];
     }
   }, [token]);
 
@@ -31,7 +28,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        const res = await axios.get('/api/auth/user');
+        const res = await api.get('/api/auth/user');
         setUser(res.data);
         setIsAuthenticated(true);
       } catch (err) {
@@ -53,7 +50,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      const res = await axios.post('/api/auth/register', formData);
+      const res = await api.post('/api/auth/register', formData);
       
       localStorage.setItem('token', res.data.token);
       setToken(res.data.token);
@@ -76,7 +73,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      const res = await axios.post('/api/auth/login', formData);
+      const res = await api.post('/api/auth/login', formData);
       
       localStorage.setItem('token', res.data.token);
       setToken(res.data.token);
