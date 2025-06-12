@@ -10,9 +10,8 @@ const ChatMessage = ({
   isLoading = false,
   isError = false,
   maxWidth = "80%",
-  variant = "main", // 'main' or 'panel'
+  variant = "main",
 }) => {
-  // Format timestamp
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -21,12 +20,14 @@ const ChatMessage = ({
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="flex items-center">
-          <div className="w-5 h-5 border-t-2 border-indigo-500 rounded-full animate-spin mr-2"></div>
-          <p>Thinking...</p>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 border-2 border-t-indigo-500 border-r-indigo-500 border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-500">Thinking...</p>
         </div>
       );
-    }    if (message.role === "assistant") {
+    }
+    
+    if (message.role === "assistant") {
       return (
         <div className={`selectable-text w-full min-w-0 ${variant === 'panel' ? 'overflow-visible' : ''}`}>
           <MarkdownRenderer content={message.content} variant={variant} />
@@ -35,68 +36,67 @@ const ChatMessage = ({
     }
 
     return <p className="break-words overflow-wrap-anywhere">{message.content}</p>;
-  };  const getMessageClasses = () => {    if (variant === "main") {
-      // AI messages cover full width, user messages stay limited
-      if (message.role === "assistant") {
-        return `w-full rounded-lg p-4 relative min-w-0 break-words overflow-hidden message-with-thread bg-white shadow-sm transition-all duration-200 hover:shadow-md message-animation ${isLoading ? "opacity-60" : ""}`;
-      } else {
-        // User messages keep responsive max-width
-        const baseClasses = `max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl rounded-lg p-4 relative min-w-0 break-words overflow-hidden message-with-thread transition-all duration-200 hover:shadow-lg`;
-        return `${baseClasses} bg-indigo-600 text-white hover:bg-indigo-700 ${isLoading ? "opacity-60" : ""}`;
-      }
-    }    // Panel variant - AI messages fill full width, user messages stay limited
-    if (message.role === "assistant") {
-      // AI messages fill the full width in panel
-      return `w-full rounded-lg p-3 relative min-w-0 break-words transition-all duration-200 hover:shadow-md message-animation ${
-        isError
-          ? "bg-red-50 shadow-sm hover:bg-red-100"
-          : "bg-white shadow-sm hover:bg-gray-50"
-      } ${isLoading ? "opacity-60 loading-pulse" : ""}`;
-    } else {
-      // User messages keep limited width in panel
-      return `max-w-xs sm:max-w-sm md:max-w-md rounded-lg p-3 relative min-w-0 break-words overflow-hidden bg-indigo-600 text-white transition-all duration-200 hover:bg-indigo-700 hover:shadow-lg message-animation ${isLoading ? "opacity-60" : ""}`;
-    }
   };
 
-  const getTimestampClasses = () => {
+  const getMessageClasses = () => {
+    const baseClasses = "rounded-xl p-4 relative min-w-0 break-words transition-all duration-300 ease-out";
+    
     if (variant === "main") {
-      return `text-xs mt-1 ${
-        message.role === "user" ? "text-indigo-200" : "text-gray-500"
-      }`;
+      if (message.role === "assistant") {
+        return `${baseClasses} w-full bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.05)] ${
+          isLoading ? "opacity-80" : ""
+        }`;
+      } else {
+        return `${baseClasses} bg-gradient-to-r from-indigo-600 to-purple-600 text-white max-w-[90%] hover:from-indigo-700 hover:to-purple-700 ${
+          isLoading ? "opacity-80" : ""
+        }`;
+      }
     }
 
     // Panel variant
-    return `text-xs mt-1 ${
-      message.role === "user" ? "text-indigo-200" : "text-gray-500"
+    if (message.role === "assistant") {
+      return `${baseClasses} w-full bg-white border border-gray-100 shadow-sm ${
+        isError ? "bg-red-50 border-red-100" : ""
+      } ${isLoading ? "animate-pulse" : ""}`;
+    } else {
+      return `${baseClasses} bg-gradient-to-r from-indigo-500 to-purple-500 text-white max-w-[85%] shadow-sm`;
+    }
+  };
+
+  const getContainerClasses = () => {
+    return `flex ${message.role === "user" ? "justify-end" : "justify-start"} mb-4 last:mb-0`;
+  };
+
+  const getTimestampClasses = () => {
+    return `text-xs mt-2 ${
+      message.role === "user" ? "text-indigo-100" : "text-gray-400"
     }`;
   };
 
   return (
-    <div
-      className={`flex ${
-        message.role === "user" ? "justify-end" : "justify-start"
-      }`}
-    >
+    <div className={getContainerClasses()}>
       <div
         className={getMessageClasses()}
         data-role={message.role}
         data-message-id={message._id || message.id}
         data-content={message.content}
+        style={{
+          maxWidth: variant === "main" && message.role === "user" ? maxWidth : "none",
+        }}
       >
-        {/* Thread icon for assistant messages that have side threads (main variant only) */}
+        {/* Thread icon */}
         {variant === "main" &&
           message.role === "assistant" &&
           showThreadIcon &&
           hasThreads && (
             <button
               onClick={() => onThreadClick && onThreadClick(message)}
-              className="thread-icon"
+              className="absolute -top-2 -right-2 bg-white border border-gray-200 rounded-full p-1.5 shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 z-10"
               title="View side thread"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
+                className="w-4 h-4 text-gray-600"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
