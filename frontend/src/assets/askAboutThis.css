@@ -46,14 +46,7 @@
   border-radius: 0.5rem 0.5rem 0 0;
 }
 
-.ask-about-this-content {
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  overflow-x: visible;
-}
+
 
 .ask-about-this-footer {
   padding: 1rem;
@@ -94,15 +87,7 @@
   cursor: not-allowed;
 }
 
-.ask-about-this-content .flex.flex-col {
-  min-height: 0;
-  flex: 1;
-  overflow-y: auto;
-}
 
-.ask-about-this-content form {
-  margin-top: auto;
-}
 
 .ask-about-this-panel .message-with-thread {
   overflow: visible;
