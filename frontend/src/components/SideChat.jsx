@@ -513,15 +513,16 @@ const SideChat = React.forwardRef(
                     </div>
                   )}
                 </div>
-                
-                {/* Fixed close panel button */}
+                  {/* Fixed close panel button */}
                 <button
                   onClick={closePanel}
-                  className="panel-close-button flex-shrink-0"
+                  className="panel-close-button p-3 text-white bg-red-500"
+                  title="Close panel"
+                  aria-label="Close panel"
                 >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
-                              <path d="M6 4.586L9.293 1.293a1 1 0 111.414 1.414L7.414 6l3.293 3.293a1 1 0 01-1.414 1.414L6 7.414l-3.293 3.293a1 1 0 01-1.414-1.414L4.586 6 1.293 2.707a1 1 0 011.414-1.414L6 4.586z"/>
-                            </svg>
+                  <svg width="14" height="14" viewBox="0 0 12 12" fill="currentColor">
+                    <path d="M6 4.586L9.293 1.293a1 1 0 111.414 1.414L7.414 6l3.293 3.293a1 1 0 01-1.414 1.414L6 7.414l-3.293 3.293a1 1 0 01-1.414-1.414L4.586 6 1.293 2.707a1 1 0 011.414-1.414L6 4.586z"/>
+                  </svg>
                 </button>
               </div>
             </div>            <div className="ask-about-this-content flex-1 flex flex-col overflow-auto min-h-0">

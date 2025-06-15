@@ -1,0 +1,53 @@
+/* Chat component styles for messages and interactions */
+
+/* Core Layout */
+.selectable-text {
+  position: relative;
+  cursor: text;
+}
+
+.selectable-text::selection {
+  background-color: rgba(79, 70, 229, 0.3);
+  color: inherit;
+}
+
+/* Component Styles */
+.thread-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px;
+  border-radius: 4px;
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  color: #6b7280;
+}
+
+.message-with-thread {
+  position: relative;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.message-with-thread[data-role="assistant"] {
+  padding-right: 32px;
+}
+
+/* Responsive chat message styles */
+@media (max-width: 640px) {
+  .message-with-thread[data-role="user"] {
+    max-width: calc(100vw - 2rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .message-with-thread[data-role="user"] {
+    max-width: calc(100vw - 1rem);
+  }
+}

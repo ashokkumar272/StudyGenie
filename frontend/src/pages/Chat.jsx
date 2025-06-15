@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { AuthContext } from '../context/authContext';
 import { ChatContext } from '../context/chatContext';
 import ReactMarkdown from 'react-markdown';
-import { FiSend, FiTrash2, FiPlusCircle, FiFileText } from 'react-icons/fi';
+import { FiSend, FiTrash2, FiFileText } from 'react-icons/fi';
 import ChatHistory from '../components/ChatHistory';
 import SideChat from '../components/SideChat';
 import ChatSummary from '../components/ChatSummary';
@@ -196,25 +196,16 @@ const Chat = () => {
               <div ref={messagesEndRef} />
             </div>
             {/* Input area - fixed at bottom */}
-            <div className={`chat-input-area shadow-sm lg:mx-2 transition-all duration-200 hover:shadow-md ${isPanelOpen ? '' : 'lg:rounded-b-lg'}`}>
-              <div className="flex items-center gap-2 w-full">
-                <button
-                  onClick={handleNewChat}
-                  className="p-2 text-gray-500 hover:text-indigo-500 hover:bg-indigo-50 rounded-full transition-all duration-200 hover:scale-105"
-                  title="New chat"
-                >
-                  <FiPlusCircle size={20} />
-                </button>
+            <div className={`chat-input-area shadow-sm lg:mx-2 transition-all duration-200 hover:shadow-md ${isPanelOpen ? '' : 'lg:rounded-b-lg'}`}>              <div className="flex items-center gap-2 w-full">
                 <button
                   onClick={handleClearChat}
-                  className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200 hover:scale-105"
+                  className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full transition-all duration-200 hover:scale-105 flex-shrink-0"
                   title="Clear conversation"
                 >
                   <FiTrash2 size={20} />
-                </button>
-                <button
+                </button>                <button
                   onClick={() => setSummaryOpen(true)}
-                  className="p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-transparent"
+                  className="p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-transparent flex-shrink-0"
                   title="Chat summary"
                   disabled={!currentSessionId || messages.length === 0}
                 >

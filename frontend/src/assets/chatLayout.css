@@ -1,0 +1,143 @@
+/* Chat layout and responsive design styles */
+
+/* Mobile Responsive Styles */
+@media (max-width: 1023px) {
+  .chat-container {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .main-chat-area {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 !important;
+  }
+  
+  .main-chat-area.panel-open {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 !important;
+  }
+  
+  .ask-panel-container.panel-open {
+    position: fixed;
+    top: 56px; /* Account for mobile header height */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    z-index: 30;
+    border-left: none;
+    background-color: white;
+  }
+  
+  /* Consistent mobile padding */
+  .main-chat-area .flex-1.overflow-auto.chat-content-area,
+  .ask-about-this-content .flex-1.chat-content-area {
+    padding: 0.75rem !important;
+  }
+  
+  .main-chat-area .chat-input-area,
+  .ask-about-this-content .chat-input-area {
+    padding: 0.75rem !important;
+  }
+}
+
+/* Desktop - 70% width for chat area when panel is not open */
+@media (min-width: 1024px) {
+  .main-chat-area:not(.panel-open) > .flex-1.overflow-auto,
+  .main-chat-area:not(.panel-open) > .bg-white.rounded-lg.shadow-sm {
+    width: 70% !important;
+    max-width: 70% !important;
+  }
+
+  /* Input area should use 70% width on desktop when panel is closed */
+  .main-chat-area:not(.panel-open) > .bg-white.border-t.shadow-sm {
+    width: 70% !important;
+    max-width: 70% !important;
+  }
+  
+  /* Ensure consistent spacing in both chat areas */
+  .main-chat-area .flex-1.overflow-auto.chat-content-area,
+  .ask-about-this-content .flex-1.chat-content-area {
+    padding: 1rem !important;
+  }
+  
+  /* Consistent input area padding */
+  .main-chat-area .chat-input-area,
+  .ask-about-this-content .chat-input-area {
+    padding: 1rem !important;
+  }
+}
+
+/* Container Layout - 50/50 Split */
+.ask-panel-container {
+  min-width: 0;
+  width: auto;
+  height: 100%;
+  display: flex;
+}
+
+.chat-container {
+  min-width: 0;
+}
+
+.chat-container.panel-open {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.ask-panel-container.panel-open {
+  width: 50%;
+  flex: 0 0 50%;
+  max-width: 50%;
+  overflow: hidden;
+  border-left: 1px solid #e5e7eb;
+}
+
+.main-chat-area {
+  flex: 1;
+  min-width: 0;
+}
+
+.main-chat-area.panel-open {
+  flex: 0 0 50%;
+  width: 50%;
+  max-width: 50%;
+  overflow: hidden;
+}
+
+.main-chat-area:not(.panel-open) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.main-chat-area:not(.panel-open) > .flex-1.overflow-auto,
+.main-chat-area:not(.panel-open) > .bg-white.rounded-lg.shadow-sm {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Input area should use full width when panel is closed */
+.main-chat-area:not(.panel-open) > .bg-white.border-t.shadow-sm {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Media Queries for mobile responsiveness */
+@media (max-width: 768px) {
+  .ask-panel-container.panel-open {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 20;
+  }
+  
+  .main-chat-area.panel-open {
+    display: none;
+  }
+}
