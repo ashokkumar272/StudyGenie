@@ -27,7 +27,7 @@ const App = () => {
         <Router>
           <div className="flex flex-col h-screen overflow-hidden">
             <Navbar />
-            <main className="flex-grow pt-16 overflow-hidden">
+            <main className="flex-grow pt-14 lg:pt-16 overflow-hidden">
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Home />} />

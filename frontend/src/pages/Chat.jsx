@@ -165,18 +165,20 @@ const Chat = () => {
       window.dispatchEvent(errorEvent);
     }
   };
-
   return (
     <div className="h-full"> {/* Fill available space without forcing scroll */}
       {/* Main container with fixed height and three sections */}
       <div className="mx-auto h-full flex bg-gray-50 shadow-lg">
-        {/* Chat history sidebar
-        {/* Chat history sidebar */}
-        <ChatHistory />          {/* Chat area with right panel layout */}
+        {/* Chat history sidebar - hidden on mobile */}
+        <div className="hidden lg:block">
+          <ChatHistory />
+        </div>
+
+        {/* Chat area with right panel layout */}
         <div className={`flex flex-1 chat-container ${isPanelOpen ? 'panel-open' : ''}`}>
           {/* Main chat area */}
           <div className={`flex flex-col relative main-chat-area ${isPanelOpen ? 'panel-open' : ''}`}>            {/* Chat container - scrollable */}
-            <div className="flex-1 overflow-auto p-4 bg-white rounded-lg shadow-sm mx-2 transition-all duration-200 hover:shadow-md">
+            <div className="flex-1 overflow-auto chat-content-area bg-white rounded-lg shadow-sm lg:mx-2 transition-all duration-200 hover:shadow-md">
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
                   <h2 className="text-2xl font-bold mb-2">Welcome to AI Chatbot</h2>
@@ -193,7 +195,8 @@ const Chat = () => {
               )}
               <div ref={messagesEndRef} />
             </div>
-            {/* Input area - fixed at bottom */}            <div className={`bg-white border-t shadow-sm p-3 mx-2 transition-all duration-200 hover:shadow-md ${isPanelOpen ? '' : 'rounded-b-lg'}`}>
+            {/* Input area - fixed at bottom */}
+            <div className={`chat-input-area shadow-sm lg:mx-2 transition-all duration-200 hover:shadow-md ${isPanelOpen ? '' : 'lg:rounded-b-lg'}`}>
               <div className="flex items-center gap-2 w-full">
                 <button
                   onClick={handleNewChat}
@@ -228,14 +231,18 @@ const Chat = () => {
                 />
               </div>
             </div>
-          </div>          {/* Empty container for the right panel that becomes visible when needed */}
-          <div className={`ask-panel-container ${isPanelOpen ? 'panel-open' : ''}`}>            <SideChat 
+          </div>
+
+          {/* Empty container for the right panel that becomes visible when needed */}
+          <div className={`ask-panel-container ${isPanelOpen ? 'panel-open' : ''}`}>
+            <SideChat 
               ref={sideChatRef}
               onSubmit={handleFollowupSubmit} 
               isPanel={true} 
               onPanelStateChange={handlePanelStateChange}
             />
-          </div>        </div>
+          </div>
+        </div>
       </div>
 
       {/* Chat Summary Modal */}

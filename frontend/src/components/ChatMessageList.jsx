@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 
 const ChatMessageList = ({ messages, onThreadClick, hasThreads, showThreadIcon, variant = "main" }) => {
   return (
-    <div className="space-y-4">
+    <div className="space-y-0">
       {messages.map((msg, index) => (
         <ChatMessage
           key={msg._id || msg.id || index}

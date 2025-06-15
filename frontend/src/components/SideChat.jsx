@@ -524,15 +524,14 @@ const SideChat = React.forwardRef(
                             </svg>
                 </button>
               </div>
-            </div>
-            <div className="ask-about-this-content flex-1 flex flex-col overflow-auto min-h-0">
+            </div>            <div className="ask-about-this-content flex-1 flex flex-col overflow-auto min-h-0">
               {/* Only show selection on first load */}
               {selection && panelMessages.length === 0 && (
                 <div className="ask-about-this-selection">
                   "{selection.text}"
                 </div>
               )}              {/* Messages container */}
-              <div className="flex-1 overflow-auto min-h-0">
+              <div className="flex-1 chat-content-area overflow-auto min-h-0">
                 <ChatMessageList
                   messages={panelMessages}
                   variant="panel"
@@ -540,7 +539,7 @@ const SideChat = React.forwardRef(
                 <div ref={messagesEndRef} />
               </div>
               {/* Input form fixed at bottom */}
-              <div className="pt-2 border-t bg-white sticky bottom-0 z-10">
+              <div className="chat-input-area sticky bottom-0 z-10">
                 <ChatInput
                   value={followupQuestion}
                   onChange={handleInputChange}

@@ -37,9 +37,8 @@ const ChatMessage = ({
 
     return <p className="break-words overflow-wrap-anywhere">{message.content}</p>;
   };
-
   const getMessageClasses = () => {
-    const baseClasses = "rounded-xl p-4 relative min-w-0 break-words transition-all duration-300 ease-out";
+    const baseClasses = "rounded-xl p-3 relative min-w-0 break-words transition-all duration-300 ease-out";
     
     if (variant === "main") {
       if (message.role === "assistant") {
@@ -62,7 +61,6 @@ const ChatMessage = ({
       return `${baseClasses} bg-gradient-to-r from-indigo-500 to-purple-500 text-white max-w-[85%] shadow-sm`;
     }
   };
-
   const getContainerClasses = () => {
     return `flex ${message.role === "user" ? "justify-end" : "justify-start"} mb-4 last:mb-0`;
   };
