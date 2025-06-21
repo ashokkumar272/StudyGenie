@@ -1,17 +1,16 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import PrivateRoute from './components/PrivateRoute';
-import { AuthProvider } from './context/authContext';
-import { ChatProvider } from './context/chatContext';
+import React, { Suspense, lazy } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import PrivateRoute from "./components/PrivateRoute";
+import { AuthProvider } from "./context/authContext";
+import { ChatProvider } from "./context/chatContext";
 
 // Lazy load page components
-const Home = lazy(() => import('./pages/Home'));
-const Login = lazy(() => import('./pages/Login'));
-const Register = lazy(() => import('./pages/Register'));
-const Chat = lazy(() => import('./pages/Chat'));
-const Admin = lazy(() => import('./pages/Admin'));
-const SummaryPage = lazy(() => import('./pages/SummaryPage'));
+const Home = lazy(() => import("./pages/Home"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const Chat = lazy(() => import("./pages/Chat"));
+const SummaryPage = lazy(() => import("./pages/SummaryPage"));
 
 // Loading component
 const PageLoader = () => (
@@ -33,37 +32,29 @@ const App = () => {
                   <Route path="/" element={<Home />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
-                  <Route 
-                    path="/chat" 
+                  <Route
+                    path="/chat"
                     element={
                       <PrivateRoute>
                         <Chat />
                       </PrivateRoute>
-                    } 
+                    }
                   />
-                  <Route 
-                    path="/chat/:sessionId" 
+                  <Route
+                    path="/chat/:sessionId"
                     element={
                       <PrivateRoute>
                         <Chat />
                       </PrivateRoute>
-                    } 
+                    }
                   />
-                  <Route 
-                    path="/summary/:sessionId" 
+                  <Route
+                    path="/summary/:sessionId"
                     element={
                       <PrivateRoute>
                         <SummaryPage />
                       </PrivateRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/admin" 
-                    element={
-                      <PrivateRoute>
-                        <Admin />
-                      </PrivateRoute>
-                    } 
+                    }
                   />
                 </Routes>
               </Suspense>

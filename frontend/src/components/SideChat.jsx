@@ -192,11 +192,10 @@ const SideChat = React.forwardRef(
       ) {
         setShowModal(false);
       }
-    };
-    // Scroll to bottom when panel messages change
+    };    // Scroll to bottom when panel messages change
     useEffect(() => {
       if (messagesEndRef.current && isPanelOpen) {
-        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        messagesEndRef.current.scrollIntoView({ behavior: "instant" });
       }
     }, [panelMessages, isPanelOpen]);
 

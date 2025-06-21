@@ -30,14 +30,10 @@ const Navbar = () => {
           <ul className='flex gap-4 items-center'>
             {isAuthenticated ? (
               <>
-                <li className="text-sm">{user?.name}</li>
-                <li>
+                <li className="text-sm">{user?.name}</li>                <li>
                   <button onClick={handleChatClick} className="hover:text-indigo-200 bg-transparent border-none text-white cursor-pointer">
                     Chat
                   </button>
-                </li>
-                <li>
-                  <Link to="/admin" className="hover:text-indigo-200">Admin</Link>
                 </li>
                 <li>
                   <button 

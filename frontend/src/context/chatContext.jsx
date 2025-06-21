@@ -65,20 +65,19 @@ export const ChatProvider = ({ children }) => {
       console.error('No session ID provided');
       return;
     }
-    
-    try {
+      try {
       setLoading(true);
+      setError(null); // Clear any previous errors
       const res = await api.get(`/api/chat/session/${sessionId}`);
       
       if (!res.data) {
         throw new Error('Invalid response from server');
       }
-      
-      setMessages(res.data);
+        setMessages(res.data);
       setCurrentSessionId(sessionId);
       
-      // Also fetch side threads for this session
-      await fetchSideThreads(sessionId);
+      // Don't fetch side threads immediately - load them lazily when needed
+      // await fetchSideThreads(sessionId);
     } catch (err) {
       console.error('Fetch session messages error:', err);
       setError('Failed to load chat messages');
@@ -452,14 +451,14 @@ export const ChatProvider = ({ children }) => {
         error,
         chatSessions,
         currentSessionId,
-        sideThreads,
-        sendMessage,        sendFollowupQuestion,
+        sideThreads,        sendMessage,        sendFollowupQuestion,
         sendSideThreadMessage,
         fetchSideThreadMessages,
         fetchSideThreadSelections,
-        clearChatHistory,
-        clearError,
+        fetchSideThreads,
+        clearChatHistory,        clearError,
         fetchSessionMessages,
+        fetchChatSessions,
         deleteSession,
         startNewSession,
         getChatSummary

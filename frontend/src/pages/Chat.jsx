@@ -8,8 +8,7 @@ import ChatSummary from "../components/ChatSummary";
 import MainChat from "../components/MainChat";
 
 const Chat = () => {
-  const { isAuthenticated, user, logout } = useContext(AuthContext);
-  const {
+  const { isAuthenticated, user, logout } = useContext(AuthContext);  const {
     messages,
     loading,
     sendMessage,
@@ -21,7 +20,8 @@ const Chat = () => {
     fetchSideThreadMessages,
     fetchSideThreadSelections,
     fetchSessionMessages,
-  } = useContext(ChatContext);  const [isPanelOpen, setIsPanelOpen] = useState(false);
+    fetchSideThreads,
+  } = useContext(ChatContext);const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const sideChatRef = useRef(null);
   const mainChatRef = useRef(null);
@@ -43,13 +43,19 @@ const Chat = () => {
     } else if (isAuthenticated && !sessionId && currentSessionId) {
       // Redirect to current session URL if we have a session but no URL param
       navigate(`/chat/${currentSessionId}`, { replace: true });
-    }
-  }, [
+    }  }, [
     isAuthenticated,
     sessionId,
     currentSessionId,
     fetchSessionMessages,
     navigate,  ]);
+  
+  // Load side threads after messages are loaded (for showing thread buttons)
+  useEffect(() => {
+    if (isAuthenticated && currentSessionId && messages.length > 0) {
+      fetchSideThreads(currentSessionId);
+    }
+  }, [isAuthenticated, currentSessionId, messages.length, fetchSideThreads]);
   
   // Handle panel state changes
   const handlePanelStateChange = (isOpen) => {
@@ -78,11 +84,11 @@ const Chat = () => {
   const handleSummaryOpen = () => {
     setSummaryOpen(true);
   };
-
   // Check if a message has side threads
   const hasThreads = (messageId) => {
     return sideThreads.includes(messageId);
-  }; // Handle thread icon click
+  }; 
+  // Handle thread icon click - side threads should already be loaded
   const handleThreadClick = async (message) => {
     if (!sideChatRef.current || !currentSessionId) return;
 

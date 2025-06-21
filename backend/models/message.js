@@ -21,8 +21,7 @@ const MessageSchema = new mongoose.Schema({
     },
     timestamp: {
         type: Date,
-        default: Date.now
-    },
+        default: Date.now    },
     // Chat type: main for regular chat, side for follow-up threads
     chatType: {
         type: String,
@@ -62,5 +61,11 @@ const MessageSchema = new mongoose.Schema({
         default: null
     }
 });
+
+// Add indexes for better query performance
+MessageSchema.index({ userId: 1, chatSessionId: 1, timestamp: 1 });
+MessageSchema.index({ userId: 1, chatType: 1, timestamp: -1 });
+MessageSchema.index({ userId: 1, mainThreadId: 1, linkedToMessageId: 1 });
+MessageSchema.index({ chatSessionId: 1, timestamp: 1 });
 
 module.exports = mongoose.model('Message', MessageSchema);

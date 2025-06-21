@@ -21,12 +21,10 @@ const MainChat = React.forwardRef(
     } = useContext(ChatContext);
 
     const [newMessage, setNewMessage] = useState("");
-    const messagesEndRef = useRef(null);
-
-    // Scroll to bottom when messages change
+    const messagesEndRef = useRef(null);    // Scroll to bottom when messages change
     useEffect(() => {
       if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        messagesEndRef.current.scrollIntoView({ behavior: "instant" });
       }
     }, [messages]);
 

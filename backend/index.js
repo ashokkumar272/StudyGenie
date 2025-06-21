@@ -6,7 +6,6 @@ const dotenv = require('dotenv');
 const Connection = require('./utils/db');
 const authRoutes = require('./routes/auth');
 const chatRoutes = require('./routes/chat');
-const adminRoutes = require('./routes/admin');
 const path = require('path')
 
 // Load environment variables
@@ -27,7 +26,6 @@ app.use(cors({
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
-app.use('/api/admin', adminRoutes);
 
 //-------------------deployement-----------------------
 

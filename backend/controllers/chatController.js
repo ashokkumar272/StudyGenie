@@ -59,11 +59,13 @@ async function getHistory(req, res) {
 async function getSessions(req, res) {
   try {
     const userId = req.user.id;
+    const limit = parseInt(req.query.limit) || 50; // Limit to 50 sessions by default
     const sessions = await Message.aggregate([
       { $match: { userId: new mongoose.Types.ObjectId(userId), chatType: "main" } },
       { $sort: { timestamp: 1 } },
       { $group: { _id: "$chatSessionId", firstMessage: { $first: "$content" }, lastMessageTime: { $last: "$timestamp" }, messageCount: { $sum: 1 } } },
       { $sort: { lastMessageTime: -1 } },
+      { $limit: limit }
     ]);
     res.json(sessions);
   } catch (error) {
@@ -77,7 +79,11 @@ async function getSessionMessages(req, res) {
   try {
     const userId = req.user.id;
     const { sessionId } = req.params;
-    const messages = await Message.find({ userId, chatSessionId: sessionId, chatType: "main" }).sort({ timestamp: 1 });
+    const limit = parseInt(req.query.limit) || 100; // Limit to 100 messages by default
+    const messages = await Message.find({ userId, chatSessionId: sessionId, chatType: "main" })
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .sort({ timestamp: 1 }); // Get latest messages first, then reverse for chronological order
     res.json(messages);
   } catch (error) {
     console.error("Get session messages error:", error.message);
