@@ -1,9 +1,8 @@
-import React from "react";
 import PropTypes from "prop-types";
 
-const ChatInput = ({ value, onChange, onSubmit, loading, placeholder = "Type your message...", disabled }) => {
+const ChatInput = ({ value, onChange, onSubmit, loading, placeholder = "Type your message...", disabled, className = "" }) => {
   return (
-    <form onSubmit={onSubmit} className="flex-1 flex min-w-0">
+    <form onSubmit={onSubmit} className={`flex-1 flex min-w-0 ${className}`}>
       <input
         type="text"
         value={value}
@@ -36,6 +35,7 @@ ChatInput.propTypes = {
   loading: PropTypes.bool,
   placeholder: PropTypes.string,
   disabled: PropTypes.bool,
+  className: PropTypes.string,
 };
 
 export default ChatInput;

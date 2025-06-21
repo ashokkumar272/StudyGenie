@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import PropTypes from "prop-types";
-import MarkdownRenderer from "./MarkdownRenderer";
 import { ChatContext } from "../context/chatContext";
-import ChatMessage from "./ChatMessage";
 import ChatMessageList from "./ChatMessageList";
 import ChatInput from "./ChatInput";
 import "../assets/askAboutThis.css";
@@ -18,12 +16,12 @@ const SideChat = React.forwardRef(
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [showButton, setShowButton] = useState(false);
     const [showModal, setShowModal] = useState(false);
-    const [isPanelOpen, setIsPanelOpen] = useState(false);
-    const [followupQuestion, setFollowupQuestion] = useState("");
+    const [isPanelOpen, setIsPanelOpen] = useState(false);    const [followupQuestion, setFollowupQuestion] = useState("");
     const [panelMessages, setPanelMessages] = useState([]);
     const [sideThreadId, setSideThreadId] = useState(null);
     const [sideThreadSelections, setSideThreadSelections] = useState([]); // All selections for current parent
-    const [currentSelectionHash, setCurrentSelectionHash] = useState(null);    const modalRef = useRef(null);
+    const [currentSelectionHash, setCurrentSelectionHash] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);const modalRef = useRef(null);
     const buttonRef = useRef(null);
     const savedSelection = useRef(null);
     const messagesEndRef = useRef(null);
@@ -207,13 +205,15 @@ const SideChat = React.forwardRef(
       if (onPanelStateChange) {
         onPanelStateChange(isPanelOpen);
       }
-    }, [isPanelOpen, onPanelStateChange]);
-    // Handle submitting the form
+    }, [isPanelOpen, onPanelStateChange]);    // Handle submitting the form
     const handleModalSubmit = async (event) => {
       event.preventDefault();
       if (!selection || !followupQuestion.trim()) return;
 
       if (isPanel && currentSessionId) {
+        // Set loading state
+        setIsLoading(true);
+
         // Create a user message for the panel
         const userMessage = {
           id: Date.now().toString(),
@@ -225,17 +225,6 @@ const SideChat = React.forwardRef(
         // Add it to panel messages
         setPanelMessages((prev) => [...prev, userMessage]);
 
-        // Create a loading placeholder
-        const loadingMessage = {
-          id: Date.now().toString() + "-loading",
-          role: "assistant",
-          content: "Thinking...",
-          isLoading: true,
-          timestamp: new Date(),
-        };
-
-        setPanelMessages((prev) => [...prev, loadingMessage]);
-
         try {
           // Send to side thread API
           const response = await sendSideThreadMessage({
@@ -244,9 +233,6 @@ const SideChat = React.forwardRef(
             selectedText: selection.text,
             userQuery: followupQuestion,
           });
-
-          // Remove loading message and add real response
-          setPanelMessages((prev) => prev.filter((msg) => !msg.isLoading));
 
           const assistantMessage = {
             id: response.messageId,
@@ -261,9 +247,6 @@ const SideChat = React.forwardRef(
         } catch (error) {
           console.error("Error sending side thread message:", error);
 
-          // Remove loading message and add error
-          setPanelMessages((prev) => prev.filter((msg) => !msg.isLoading));
-
           const errorMessage = {
             id: Date.now().toString() + "-error",
             role: "assistant",
@@ -274,6 +257,9 @@ const SideChat = React.forwardRef(
           };
 
           setPanelMessages((prev) => [...prev, errorMessage]);
+        } finally {
+          // Clear loading state
+          setIsLoading(false);
         }
 
         // Clear the input
@@ -540,14 +526,17 @@ const SideChat = React.forwardRef(
                 <div ref={messagesEndRef} />
               </div>              {/* Input form fixed at bottom */}
               <div className="p-3 lg:p-4 sticky bottom-0 z-10 mt-auto">
-                <ChatInput
-                  value={followupQuestion}
-                  onChange={handleInputChange}
-                  onSubmit={handleModalSubmit}
-                  loading={false}
-                  disabled={!selection}
-                  placeholder="Ask for clarification or follow-up questions..."
-                />
+                <div className="flex items-center gap-1 w-full max-w-full">
+                  <ChatInput
+                    value={followupQuestion}
+                    onChange={handleInputChange}
+                    onSubmit={handleModalSubmit}
+                    loading={isLoading}
+                    disabled={!selection}
+                    placeholder="Ask for clarification or follow-up questions..."
+                    className="flex-1 min-w-0"
+                  />
+                </div>
               </div>
             </div>
           </div>

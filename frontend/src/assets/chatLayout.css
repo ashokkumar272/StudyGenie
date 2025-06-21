@@ -1,10 +1,13 @@
-/* Chat layout and responsive design styles */
-
 /* Mobile Responsive Styles */
 @media (max-width: 1023px) {
   .chat-container {
     width: 100% !important;
     max-width: 100% !important;
+  }
+  
+  /* Hide main chat on mobile when panel is open */
+  .chat-container.panel-open > div:first-child {
+    display: none;
   }
   
   .ask-panel-container.panel-open {
@@ -22,6 +25,17 @@
 }
 
 /* Desktop - Responsive styling handled by Tailwind classes in components */
+@media (min-width: 1024px) {
+  .chat-container.panel-open {
+    display: flex !important;
+  }
+  
+  .ask-panel-container.panel-open {
+    width: 50% !important;
+    flex: 0 0 50% !important;
+    max-width: 50% !important;
+  }
+}
 
 /* Container Layout - 50/50 Split */
 .ask-panel-container {
@@ -33,6 +47,7 @@
 
 .chat-container {
   min-width: 0;
+  display: flex;
 }
 
 .chat-container.panel-open {
