@@ -112,7 +112,7 @@ const MainChat = React.forwardRef(
 
             <button
               onClick={handleSummaryOpen}
-              className="p-2 text-gray-500 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-[#667eea] hover:to-[#764ba2] hover:bg-gradient-to-r hover:from-[#667eea] hover:to-[#764ba2] hover:bg-opacity-10 rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-transparent flex-shrink-0"
+              className="p-2 text-gray-500 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-[#667eea] hover:to-[#764ba2] hover:bg-opacity-10 rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-transparent flex-shrink-0"
               title="Chat summary"
               disabled={!currentSessionId || messages.length === 0}
             >
