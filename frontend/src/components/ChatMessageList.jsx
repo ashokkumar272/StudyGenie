@@ -1,8 +1,9 @@
 import React from "react";
 import ChatMessage from "./ChatMessage";
+import TypingIndicator from "./TypingIndicator";
 import PropTypes from "prop-types";
 
-const ChatMessageList = ({ messages, onThreadClick, hasThreads, showThreadIcon, variant = "main" }) => {
+const ChatMessageList = ({ messages, onThreadClick, hasThreads, showThreadIcon, variant = "main", showTyping = false }) => {
   return (
     <div className="space-y-0">
       {messages.map((msg, index) => (
@@ -15,6 +16,7 @@ const ChatMessageList = ({ messages, onThreadClick, hasThreads, showThreadIcon, 
           variant={variant}
         />
       ))}
+      {showTyping && <TypingIndicator variant={variant} />}
     </div>
   );
 };
@@ -25,6 +27,7 @@ ChatMessageList.propTypes = {
   hasThreads: PropTypes.func,
   showThreadIcon: PropTypes.bool,
   variant: PropTypes.oneOf(["main", "panel"]),
+  showTyping: PropTypes.bool,
 };
 
 export default ChatMessageList;

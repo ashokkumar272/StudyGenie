@@ -70,7 +70,7 @@ const MainChat = React.forwardRef(
       >
         {/* Chat container - scrollable */}
         <div
-          className={`flex-1 overflow-auto chat-content-area bg-white rounded-lg shadow-sm transition-all duration-200 hover:shadow-md w-full max-w-full ${
+          className={`flex-1 overflow-auto chat-content-area bg-gray-200 rounded-lg shadow-sm transition-all duration-200 hover:shadow-md w-full max-w-full ${
             isPanelOpen 
               ? "sm:mx-1 lg:mx-1" 
               : "sm:mx-2 lg:mx-2 lg:w-[70%] lg:max-w-[70%]"
@@ -85,13 +85,13 @@ const MainChat = React.forwardRef(
                 Ask me anything and I'll do my best to help!
               </p>
             </div>
-          ) : (
-            <ChatMessageList
+          ) : (            <ChatMessageList
               messages={messages}
               onThreadClick={onThreadClick}
               hasThreads={hasThreads}
               showThreadIcon={true}
               variant="main"
+              showTyping={loading}
             />
           )}
           <div ref={messagesEndRef} />
@@ -112,19 +112,15 @@ const MainChat = React.forwardRef(
 
             <button
               onClick={handleSummaryOpen}
-              className="p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-transparent flex-shrink-0"
+              className="p-2 text-gray-500 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-[#667eea] hover:to-[#764ba2] hover:bg-gradient-to-r hover:from-[#667eea] hover:to-[#764ba2] hover:bg-opacity-10 rounded-full transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-transparent flex-shrink-0"
               title="Chat summary"
               disabled={!currentSessionId || messages.length === 0}
             >
               <FiFileText size={20} />
-            </button>
-
-            <ChatInput
+            </button>            <ChatInput
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onSubmit={handleSubmit}
-              loading={loading}
-              disabled={false}
               placeholder="Type your message..."
               className="flex-1 min-w-0"
             />

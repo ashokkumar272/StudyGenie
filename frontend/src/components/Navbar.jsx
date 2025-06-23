@@ -1,9 +1,9 @@
-import React, { useContext, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/authContext';
-import { ChatContext } from '../context/chatContext';
-import { FiMenu } from 'react-icons/fi';
-import MobileSidebar from './MobileSidebar';
+import React, { useContext, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/authContext";
+import { ChatContext } from "../context/chatContext";
+import { FiMenu } from "react-icons/fi";
+import MobileSidebar from "./MobileSidebar";
 
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useContext(AuthContext);
@@ -21,24 +21,22 @@ const Navbar = () => {
         navigate(`/chat/${newSessionId}`);
       }
     }
-  };  return (
+  };
+  return (
     <>
       {/* Desktop Navbar - hidden on mobile */}
-      <div className='hidden lg:flex fixed top-0 left-0 right-0 z-10 bg-indigo-600 text-white justify-between px-6 py-4 align-bottom shadow-md'>
-        <Link to="/" className='text-2xl font-bold'>StudyGenie</Link>
+      <div className="hidden lg:flex fixed top-0 left-0 right-0 z-10 bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white justify-between px-6 py-4 align-bottom shadow-md">
+        <Link to="/" className="text-2xl font-bold">
+          StudyGenie
+        </Link>
         <div>
-          <ul className='flex gap-4 items-center'>
+          <ul className="flex gap-4 items-center">
             {isAuthenticated ? (
               <>
-                <li className="text-sm">{user?.name}</li>                <li>
-                  <button onClick={handleChatClick} className="hover:text-indigo-200 bg-transparent border-none text-white cursor-pointer">
-                    Chat
-                  </button>
-                </li>
-                <li>
-                  <button 
+                <li className="text-sm">{user?.name}</li> <li></li>                <li>
+                  <button
                     onClick={logout}
-                    className="bg-white text-indigo-600 px-3 py-1 rounded-md text-sm hover:bg-indigo-100"
+                    className="text-white bg-red-700 border px-3 py-1 rounded-md text-sm cursor-pointer hover:bg-red-800 transition-colors duration-200"
                   >
                     Logout
                   </button>
@@ -47,12 +45,15 @@ const Navbar = () => {
             ) : (
               <>
                 <li>
-                  <Link to="/login" className="hover:text-indigo-200">Login</Link>
+                  <Link to="/login" className="hover:text-gray-200">
+                    Login
+                  </Link>
                 </li>
                 <li>
-                  <Link 
-                    to="/register" 
-                    className="bg-white text-indigo-600 px-3 py-1 rounded-md text-sm hover:bg-indigo-100"
+                  {" "}
+                  <Link
+                    to="/register"
+                    className="hover:text-gray-200"
                   >
                     Register
                   </Link>
@@ -64,21 +65,24 @@ const Navbar = () => {
       </div>
 
       {/* Mobile Header - visible only on mobile */}
-      <div className='lg:hidden fixed top-0 left-0 right-0 z-10 bg-indigo-600 text-white flex justify-between items-center px-4 py-3 shadow-md'>
-        <button 
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-10 bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white flex justify-between items-center px-4 py-3 shadow-md">
+        {" "}
+        <button
           onClick={() => setIsMobileSidebarOpen(true)}
-          className="p-2 hover:bg-indigo-700 rounded-md transition-colors"
+          className="p-2 hover:bg-white hover:bg-opacity-20 rounded-md transition-colors"
         >
           <FiMenu size={20} />
         </button>
-        <Link to="/" className='text-xl font-bold'>StudyGenie</Link>
+        <Link to="/" className="text-xl font-bold">
+          StudyGenie
+        </Link>
         <div className="w-10"></div> {/* Spacer for centering */}
       </div>
 
       {/* Mobile Sidebar */}
-      <MobileSidebar 
-        isOpen={isMobileSidebarOpen} 
-        onClose={() => setIsMobileSidebarOpen(false)} 
+      <MobileSidebar
+        isOpen={isMobileSidebarOpen}
+        onClose={() => setIsMobileSidebarOpen(false)}
       />
     </>
   );

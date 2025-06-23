@@ -54,7 +54,7 @@ const ChatHistory = () => {
                   navigate(`/chat/${newSessionId}`);
                 }
               }}
-              className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-2 px-4 rounded-lg mb-4 hover:bg-indigo-700 transition"
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white py-2 px-4 rounded-lg mb-4 hover:bg-indigo-700 transition"
             >
               <FiPlusCircle />
               <span>New Chat</span>
@@ -75,7 +75,7 @@ const ChatHistory = () => {
                     }`}
                     onClick={() => navigate(`/chat/${session._id}`)}
                   >
-                    <div className="text-indigo-600 mr-3 mt-1">
+                    <div className=" mr-3 mt-1">
                       <FiMessageSquare size={16} />
                     </div>                    <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
@@ -91,7 +91,7 @@ const ChatHistory = () => {
                           e.stopPropagation();
                           navigate(`/summary/${session._id}`);
                         }}
-                        className="text-gray-400 hover:text-blue-500 transition p-1"
+                        className="text-gray-500 hover:bg-clip-text hover:text-indigo-600 transition p-1"
                         title="View summary"
                       >
                         <FiFileText size={14} />
@@ -103,7 +103,7 @@ const ChatHistory = () => {
                             deleteSession(session._id);
                           }
                         }}
-                        className="text-gray-400 hover:text-red-500 transition p-1"
+                        className="text-gray-500 hover:text-red-500 transition p-1"
                         title="Delete conversation"
                       >
                         <FiTrash2 size={14} />
@@ -125,7 +125,7 @@ const ChatHistory = () => {
                 navigate(`/chat/${newSessionId}`);
               }
             }}
-            className="w-full flex items-center justify-center bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition"
+            className="w-full flex items-center justify-center bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white p-3 rounded-lg hover:bg-indigo-700 transition"
             title="New Chat"
           >
             <FiPlusCircle size={20} />

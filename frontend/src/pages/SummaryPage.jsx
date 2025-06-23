@@ -135,10 +135,9 @@ const SummaryPage = () => {
               <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6 max-w-md mx-auto">
                 <p className="text-red-600 font-medium">Error</p>
                 <p className="text-red-500">{error}</p>
-              </div>
-              <button
+              </div>              <button
                 onClick={handleGenerateSummary}
-                className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                className="bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white px-6 py-2 rounded-lg hover:opacity-90 transition-colors"
               >
                 Try Again
               </button>

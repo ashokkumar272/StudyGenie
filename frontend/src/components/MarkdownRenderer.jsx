@@ -149,7 +149,7 @@ const MarkdownRenderer = ({ content, variant = "main" }) => {
           ),          a: ({ children, href, ...props }) => (
             <a 
               href={href} 
-              className="text-blue-600 hover:text-blue-800 underline" 
+              className="text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:opacity-80 underline" 
               target="_blank" 
               rel="noopener noreferrer" 
               {...props}

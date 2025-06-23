@@ -84,7 +84,7 @@ const Register = () => {
                 type="text"
                 autoComplete="name"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-[#667eea] focus:border-[#667eea] focus:z-10 sm:text-sm"
                 placeholder="Full Name"
                 value={name}
                 onChange={handleChange}
@@ -93,14 +93,13 @@ const Register = () => {
             <div>
               <label htmlFor="email-address" className="sr-only">
                 Email address
-              </label>
-              <input
+              </label>              <input
                 id="email-address"
                 name="email"
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-[#667eea] focus:border-[#667eea] focus:z-10 sm:text-sm"
                 placeholder="Email address"
                 value={email}
                 onChange={handleChange}
@@ -109,14 +108,13 @@ const Register = () => {
             <div>
               <label htmlFor="password" className="sr-only">
                 Password
-              </label>
-              <input
+              </label>              <input
                 id="password"
                 name="password"
                 type="password"
                 autoComplete="new-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-[#667eea] focus:border-[#667eea] focus:z-10 sm:text-sm"
                 placeholder="Password"
                 value={password}
                 onChange={handleChange}
@@ -132,7 +130,7 @@ const Register = () => {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-[#667eea] focus:border-[#667eea] focus:z-10 sm:text-sm"
                 placeholder="Confirm Password"
                 value={confirmPassword}
                 onChange={handleChange}
@@ -140,18 +138,17 @@ const Register = () => {
             </div>
           </div>
           
-          <div>
-            <button
+          <div>            <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#667eea]"
             >
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </div>
           
           <div className="text-sm text-center">
-            <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link to="/login" className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:opacity-80">
               Already have an account? Sign in
             </Link>
           </div>

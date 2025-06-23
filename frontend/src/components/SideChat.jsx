@@ -517,20 +517,18 @@ const SideChat = React.forwardRef(
                   "{selection.text}"
                 </div>
               )}              {/* Messages container */}
-              <div className="flex-1 chat-content-area overflow-auto min-h-0 p-3 lg:p-4">
-                <ChatMessageList
+              <div className="flex-1 bg-gray-200 chat-content-area overflow-auto min-h-0 p-3 lg:p-4">                <ChatMessageList
                   messages={panelMessages}
                   variant="panel"
+                  showTyping={isLoading}
                 />
                 <div ref={messagesEndRef} />
               </div>              {/* Input form fixed at bottom */}
               <div className="p-3 lg:p-4 sticky bottom-0 z-10 mt-auto">
-                <div className="flex items-center gap-1 w-full max-w-full">
-                  <ChatInput
+                <div className="flex items-center gap-1 w-full max-w-full">                  <ChatInput
                     value={followupQuestion}
                     onChange={handleInputChange}
                     onSubmit={handleModalSubmit}
-                    loading={isLoading}
                     disabled={!selection}
                     placeholder="Ask for clarification or follow-up questions..."
                     className="flex-1 min-w-0"
@@ -573,11 +571,9 @@ const SideChat = React.forwardRef(
                     onClick={() => setShowModal(false)}
                   >
                     Cancel
-                  </button>
-
-                  <button
+                  </button>                  <button
                     type="submit"
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                    className="px-4 py-2 bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white rounded-md hover:opacity-90"
                   >
                     Submit
                   </button>

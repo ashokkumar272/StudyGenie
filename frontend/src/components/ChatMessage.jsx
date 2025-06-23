@@ -1,4 +1,3 @@
-import React from "react";
 import PropTypes from "prop-types";
 import MarkdownRenderer from "./MarkdownRenderer";
 
@@ -36,29 +35,18 @@ const ChatMessage = ({
     }
 
     return <p className="break-words overflow-wrap-anywhere">{message.content}</p>;
-  };
-  const getMessageClasses = () => {
-    const baseClasses = "rounded-xl p-3 relative min-w-0 break-words transition-all duration-300 ease-out";
+  };  const getMessageClasses = () => {
+    const baseClasses = "rounded-2xl relative min-w-0 break-words transition-all duration-300 ease-out";
     
-    if (variant === "main") {
-      if (message.role === "assistant") {
-        return `${baseClasses} w-full bg-gradient-to-br from-white to-gray-50 border border-gray-100 shadow-[0_4px_12px_rgba(0,0,0,0.03)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.05)] ${
-          isLoading ? "opacity-80" : ""
-        }`;
-      } else {
-        return `${baseClasses} bg-gradient-to-r from-indigo-600 to-purple-600 text-white max-w-[90%] hover:from-indigo-700 hover:to-purple-700 ${
-          isLoading ? "opacity-80" : ""
-        }`;
-      }
-    }
-
-    // Panel variant
+    // Use consistent styling for both main and panel variants
     if (message.role === "assistant") {
-      return `${baseClasses} w-full bg-white border border-gray-100 shadow-sm ${
+      return `${baseClasses} w-full p-3 bg-white border-0 rounded-bl-[2px] ${
         isError ? "bg-red-50 border-red-100" : ""
-      } ${isLoading ? "animate-pulse" : ""}`;
+      } ${isLoading ? "opacity-80" : ""}`;
     } else {
-      return `${baseClasses} bg-gradient-to-r from-indigo-500 to-purple-500 text-white max-w-[85%] shadow-sm`;
+      return `${baseClasses} py-2 px-3 border rounded-br-[2px] bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white max-w-[90%] ${
+        isLoading ? "opacity-80" : ""
+      }`;
     }
   };
   const getContainerClasses = () => {
@@ -81,10 +69,8 @@ const ChatMessage = ({
         style={{
           maxWidth: variant === "main" && message.role === "user" ? maxWidth : "none",
         }}
-      >
-        {/* Thread icon */}
-        {variant === "main" &&
-          message.role === "assistant" &&
+      >        {/* Thread icon */}
+        {message.role === "assistant" &&
           showThreadIcon &&
           hasThreads && (
             <button

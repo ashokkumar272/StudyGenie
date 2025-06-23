@@ -183,7 +183,7 @@ const Chat = () => {
       {" "}
       {/* Fill available space without forcing scroll */}
       {/* Main container with fixed height and three sections */}
-      <div className="mx-auto h-full flex bg-gray-50 shadow-lg">
+      <div className="mx-auto h-full flex shadow-lg">
         {/* Chat history sidebar - hidden on mobile */}
         <div className="hidden lg:block">
           <ChatHistory />

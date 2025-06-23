@@ -30,24 +30,22 @@ const Home = () => {
           <div className="px-4 lg:w-1/2 sm:px-8 xl:pr-16">
             <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl lg:text-5xl xl:text-6xl">
               <span className="block xl:inline">Your AI-powered</span>{' '}
-              <span className="block text-indigo-600 xl:inline">Conversation Assistant</span>
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] xl:inline">Conversation Assistant</span>
             </h1>
             <p className="mt-3 max-w-md mx-auto text-lg text-gray-500 sm:text-xl md:mt-5 md:max-w-3xl">
               Get instant answers, creative ideas, and helpful assistance with our advanced AI chatbot.
             </p>
             <div className="mt-10 sm:flex sm:justify-center lg:justify-start">
-              <div className="rounded-md shadow">
-                <a
+              <div className="rounded-md shadow">                <a
                   href="/register"
-                  className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10"
+                  className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:opacity-90 md:py-4 md:text-lg md:px-10"
                 >
                   Get started
                 </a>
               </div>
-              <div className="mt-3 sm:mt-0 sm:ml-3">
-                <a
+              <div className="mt-3 sm:mt-0 sm:ml-3">                <a
                   href="/login"
-                  className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
+                  className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10"
                 >
                   Sign in
                 </a>

@@ -15,7 +15,7 @@ const SummaryPage = lazy(() => import("./pages/SummaryPage"));
 // Loading component
 const PageLoader = () => (
   <div className="flex items-center justify-center h-full">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#667eea]"></div>
   </div>
 );
 

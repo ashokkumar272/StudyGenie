@@ -90,13 +90,12 @@ const MobileSidebar = ({ isOpen, onClose }) => {
         isOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 bg-indigo-600 text-white">
+        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white">
           <Link to="/" className="text-xl font-bold" onClick={onClose}>
             StudyGenie
-          </Link>
-          <button 
+          </Link>          <button 
             onClick={onClose}
-            className="p-2 hover:bg-indigo-700 rounded-md transition-colors"
+            className="p-2 hover:bg-white hover:bg-opacity-20 rounded-md transition-colors"
           >
             <FiX size={20} />
           </button>
@@ -153,7 +152,7 @@ const MobileSidebar = ({ isOpen, onClose }) => {
               <Link 
                 to="/register" 
                 onClick={onClose}
-                className="flex items-center gap-3 p-2 text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors font-medium"
+                className="flex items-center gap-3 p-2 text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:bg-gradient-to-r hover:from-[#667eea] hover:to-[#764ba2] hover:bg-opacity-10 rounded-md transition-colors font-medium"
               >
                 <span className="text-sm">Register</span>
               </Link>
@@ -169,7 +168,7 @@ const MobileSidebar = ({ isOpen, onClose }) => {
                 <h3 className="text-sm font-semibold text-gray-500 uppercase">Chat History</h3>
                 <button
                   onClick={handleNewChat}
-                  className="p-1 text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                  className="p-1 text-transparent bg-clip-text bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:bg-gradient-to-r hover:from-[#667eea] hover:to-[#764ba2] hover:bg-opacity-10 rounded-md transition-colors"
                   title="New Chat"
                 >
                   <FiPlusCircle size={16} />
@@ -184,9 +183,8 @@ const MobileSidebar = ({ isOpen, onClose }) => {
                 <div className="space-y-2">
                   {chatSessions.map((session) => (
                     <div 
-                      key={session._id}
-                      className={`p-3 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors border ${
-                        currentSessionId === session._id ? 'bg-indigo-50 border-indigo-200' : 'border-gray-200'
+                      key={session._id}                      className={`p-3 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors border ${
+                        currentSessionId === session._id ? 'bg-gradient-to-r from-[#667eea] to-[#764ba2] bg-opacity-10 border-[#667eea]' : 'border-gray-200'
                       }`}
                       onClick={() => handleSessionClick(session._id)}
                     >
@@ -202,7 +200,7 @@ const MobileSidebar = ({ isOpen, onClose }) => {
                         <div className="flex items-center gap-1 ml-2">
                           <button
                             onClick={(e) => handleSummaryClick(session._id, e)}
-                            className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
+                            className="p-1 text-gray-400 hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-[#667eea] hover:to-[#764ba2] transition-colors"
                             title="View summary"
                           >
                             <FiFileText size={12} />
