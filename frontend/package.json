@@ -17,6 +17,7 @@
     "@tailwindcss/vite": "^4.0.3",
     "axios": "^1.7.9",
     "backend": "file:..",
+    "framer-motion": "^12.23.0",
     "highlight.js": "^11.11.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
