@@ -378,10 +378,15 @@ const SideChat = React.forwardRef(
       isPanelOpen,
     }));    // Add event listeners
     useEffect(() => {
-      document.addEventListener("selectionchange", handleTextSelection);
+      // Only show button after mouseup (selection complete)
+      const handleMouseUp = (event) => {
+        handleTextSelection(event);
+      };
+      document.addEventListener("mouseup", handleMouseUp);
       document.addEventListener("mousedown", handleClickOutside);
+      // Remove selectionchange listener (no longer needed for button)
       return () => {
-        document.removeEventListener("selectionchange", handleTextSelection);
+        document.removeEventListener("mouseup", handleMouseUp);
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }, []);
