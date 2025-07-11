@@ -147,29 +147,11 @@ const SummaryPage = () => {
 
           {summaryData && (
             <div className="p-6">
-              {/* Summary Statistics */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-                  <h3 className="font-semibold text-blue-900 mb-2">Main Messages</h3>
-                  <p className="text-3xl font-bold text-blue-600">{summaryData.totalMainMessages}</p>
-                  <p className="text-blue-700 text-sm">Primary conversation</p>
-                </div>
-                <div className="bg-green-50 p-6 rounded-lg border border-green-200">
-                  <h3 className="font-semibold text-green-900 mb-2">Side Messages</h3>
-                  <p className="text-3xl font-bold text-green-600">{summaryData.totalSideMessages}</p>
-                  <p className="text-green-700 text-sm">Follow-up discussions</p>
-                </div>
-                <div className="bg-purple-50 p-6 rounded-lg border border-purple-200">
-                  <h3 className="font-semibold text-purple-900 mb-2">Discussion Threads</h3>
-                  <p className="text-3xl font-bold text-purple-600">{summaryData.mainThreadsWithSideThreads}</p>
-                  <p className="text-purple-700 text-sm">Messages with side discussions</p>
-                </div>
-              </div>
-
               {/* AI Generated Summary */}
               <div className="mb-8">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-900">AI Generated Summary</h2>                  <button
+                  <h2 className="text-xl font-bold text-gray-900">AI Generated Summary</h2>
+                  <button
                     onClick={handleDownloadSummary}
                     disabled={downloading}
                     className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-lg transition-colors"
@@ -186,71 +168,9 @@ const SummaryPage = () => {
                 </div>
               </div>
 
-              {/* Error fallback message */}
-              {summaryData.error && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-yellow-800 font-medium">Note:</p>
-                      <p className="text-yellow-700">{summaryData.error}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Raw Conversation (collapsible) */}
-              {summaryData.rawConversation && (
-                <div className="border border-gray-200 rounded-lg mb-8">
-                  <details className="group">
-                    <summary className="p-4 cursor-pointer hover:bg-gray-50 font-medium text-gray-900 transition-colors">
-                      <span className="group-open:hidden">Show</span>
-                      <span className="hidden group-open:inline">Hide</span>
-                      {' '}Raw Formatted Conversation
-                    </summary>
-                    <div className="p-4 border-t bg-gray-50">
-                      <pre className="whitespace-pre-wrap text-sm text-gray-700 max-h-96 overflow-auto bg-white p-4 rounded border font-mono">
-                        {summaryData.rawConversation}
-                      </pre>
-                    </div>
-                  </details>
-                </div>
-              )}              {/* Metadata */}
+              {/* Metadata: Only show sessionId */}
               <div className="text-sm text-gray-500 border-t pt-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p>Summary generated on {new Date(summaryData.generatedAt).toLocaleString()}</p>
-                    {summaryData.cached && (
-                      <p className="mt-1 text-green-600 font-medium">
-                        ✓ Loaded from cache (instant result)
-                      </p>
-                    )}
-                    {summaryData.cached === false && (
-                      <p className="mt-1 text-blue-600 font-medium">
-                        🔄 Newly generated
-                      </p>
-                    )}
-                  </div>                  {summaryData.cached && (
-                    <button
-                      onClick={handleForceRegenerate}
-                      disabled={loading}
-                      className="px-3 py-1 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 rounded text-xs transition-colors"
-                      title="Force regenerate summary"
-                    >
-                      🔄 Regenerate
-                    </button>
-                  )}
-                </div>
-                <p className="mt-1">
-                  Direct link: 
-                  <code className="ml-2 bg-gray-100 px-2 py-1 rounded text-xs">
-                    {window.location.origin}/summary/{sessionId}
-                  </code>
-                </p>
+                <p>Session ID: <code className="ml-2 bg-gray-100 px-2 py-1 rounded text-xs">{sessionId}</code></p>
               </div>
             </div>
           )}
