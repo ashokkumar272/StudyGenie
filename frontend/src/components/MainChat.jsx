@@ -33,11 +33,9 @@ const MainChat = React.forwardRef(
     // Handle message submission
     const handleSubmit = async (e) => {
       e.preventDefault();
-
       if (!newMessage.trim()) return;
-
       await sendMessage(newMessage);
-      setNewMessage("");
+      setNewMessage(""); // Clear input immediately after send
     };
 
     // Handle clear chat
@@ -88,13 +86,30 @@ const MainChat = React.forwardRef(
               </p>
             </div>
           ) : (
-            <ChatMessageList
-              messages={messages}
-              onThreadClick={onThreadClick}
-              hasThreads={hasThreads}
-              showThreadIcon={true}
-              variant="main"
-            />
+            <>
+              <ChatMessageList
+                messages={messages}
+                onThreadClick={onThreadClick}
+                hasThreads={hasThreads}
+                showThreadIcon={true}
+                variant="main"
+              />
+              {loading && (
+                <div className="flex items-start gap-3 p-4">
+                  <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-indigo-500 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" strokeOpacity="0.2" />
+                      <path d="M12 2a10 10 0 0 1 10 10" />
+                    </svg>
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="bg-indigo-50 text-indigo-700 px-4 py-3 rounded-xl shadow-sm max-w-[80vw] sm:max-w-lg animate-pulse">
+                      <span className="block">Working...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
           <div ref={messagesEndRef} />
         </div>        {/* Input area - fixed at bottom */}
@@ -125,7 +140,6 @@ const MainChat = React.forwardRef(
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onSubmit={handleSubmit}
-              loading={loading}
               disabled={false}
               placeholder="Type your message..."
               className="flex-1 min-w-0"

@@ -7,6 +7,7 @@ const Connection = require('./utils/db');
 const authRoutes = require('./routes/auth');
 const chatRoutes = require('./routes/chat');
 const adminRoutes = require('./routes/admin');
+const geminiService = require('./controllers/geminiService');
 const path = require('path')
 
 // Load environment variables

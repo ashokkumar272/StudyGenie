@@ -3,6 +3,7 @@ const Message = require("../models/message");
 const Summary = require("../models/summary");
 const mongoose = require("mongoose");
 const chatUtils = require("./chatUtils");
+require('dotenv').config();
 const geminiService = require("./geminiService");
 
 // POST /api/chat
@@ -14,28 +15,72 @@ async function sendMessage(req, res) {
       return res.status(400).json({ message: "Message content is required" });
     }
     const sessionId = chatSessionId || Date.now().toString();
-    const userMessage = new Message({ userId, chatSessionId: sessionId, role: "user", content, chatType: "main" });
+    const userMessage = new Message({
+      userId,
+      chatSessionId: sessionId,
+      role: "user",
+      content,
+      chatType: "main",
+    });
     await userMessage.save();
     await chatUtils.invalidateCachedSummary(userId, sessionId);
-    const messageHistory = await Message.find({ userId, chatSessionId: sessionId, chatType: "main" })
-      .sort({ timestamp: -1 }).limit(10).sort({ timestamp: 1 });
-    const formattedMessages = messageHistory.map((msg) => ({ role: msg.role === "user" ? "user" : "model", parts: [{ text: msg.content }] }));
-    if (formattedMessages.length === 0 || formattedMessages[0].role !== "model") {
-      formattedMessages.unshift({ role: "model", parts: [{ text: "You are a helpful assistant." }] });
+    const messageHistory = await Message.find({
+      userId,
+      chatSessionId: sessionId,
+      chatType: "main",
+    })
+      .sort({ timestamp: -1 })
+      .limit(10)
+      .sort({ timestamp: 1 });
+    const formattedMessages = messageHistory.map((msg) => ({
+      role: msg.role === "user" ? "user" : "model",
+      parts: [{ text: msg.content }],
+    }));
+    if (
+      formattedMessages.length === 0 ||
+      formattedMessages[0].role !== "model"
+    ) {
+      formattedMessages.unshift({
+        role: "model",
+        parts: [{ text: "You are a helpful assistant." }],
+      });
     }
     const response = await geminiService.callGeminiAPI(formattedMessages);
     const assistantResponse = response.candidates[0].content.parts[0].text;
-    const assistantMessage = new Message({ userId, chatSessionId: sessionId, role: "assistant", content: assistantResponse || "Sorry, I could not generate a response. Please try again.", chatType: "main" });
+    const assistantMessage = new Message({
+      userId,
+      chatSessionId: sessionId,
+      role: "assistant",
+      content:
+        assistantResponse ||
+        "Sorry, I could not generate a response. Please try again.",
+      chatType: "main",
+    });
     await assistantMessage.save();
     await chatUtils.invalidateCachedSummary(userId, sessionId);
-    res.json({ message: assistantResponse, messageId: assistantMessage._id, chatSessionId: sessionId });
+    res.json({
+      message: assistantResponse,
+      messageId: assistantMessage._id,
+      chatSessionId: sessionId,
+    });
   } catch (error) {
     console.error("Chat error:", error.message);
     if (error.response) console.error("Gemini API error:", error.response.data);
     try {
-      const errorMessage = new Message({ userId: req.user.id, chatSessionId: req.body.chatSessionId || Date.now().toString(), role: "assistant", content: "Sorry, I encountered an error processing your request. Please try again.", chatType: "main" });
+      const errorMessage = new Message({
+        userId: req.user.id,
+        chatSessionId: req.body.chatSessionId || Date.now().toString(),
+        role: "assistant",
+        content:
+          "Sorry, I encountered an error processing your request. Please try again.",
+        chatType: "main",
+      });
       await errorMessage.save();
-      res.json({ message: errorMessage.content, messageId: errorMessage._id, chatSessionId: errorMessage.chatSessionId });
+      res.json({
+        message: errorMessage.content,
+        messageId: errorMessage._id,
+        chatSessionId: errorMessage.chatSessionId,
+      });
     } catch (fallbackError) {
       console.error("Fallback error response failed:", fallbackError);
       res.status(500).json({ message: "Error processing your request" });
@@ -47,7 +92,9 @@ async function sendMessage(req, res) {
 async function getHistory(req, res) {
   try {
     const userId = req.user.id;
-    const messages = await Message.find({ userId, chatType: "main" }).sort({ timestamp: 1 });
+    const messages = await Message.find({ userId, chatType: "main" }).sort({
+      timestamp: 1,
+    });
     res.json(messages);
   } catch (error) {
     console.error("Get history error:", error.message);
@@ -60,9 +107,21 @@ async function getSessions(req, res) {
   try {
     const userId = req.user.id;
     const sessions = await Message.aggregate([
-      { $match: { userId: new mongoose.Types.ObjectId(userId), chatType: "main" } },
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          chatType: "main",
+        },
+      },
       { $sort: { timestamp: 1 } },
-      { $group: { _id: "$chatSessionId", firstMessage: { $first: "$content" }, lastMessageTime: { $last: "$timestamp" }, messageCount: { $sum: 1 } } },
+      {
+        $group: {
+          _id: "$chatSessionId",
+          firstMessage: { $first: "$content" },
+          lastMessageTime: { $last: "$timestamp" },
+          messageCount: { $sum: 1 },
+        },
+      },
       { $sort: { lastMessageTime: -1 } },
     ]);
     res.json(sessions);
@@ -77,7 +136,11 @@ async function getSessionMessages(req, res) {
   try {
     const userId = req.user.id;
     const { sessionId } = req.params;
-    const messages = await Message.find({ userId, chatSessionId: sessionId, chatType: "main" }).sort({ timestamp: 1 });
+    const messages = await Message.find({
+      userId,
+      chatSessionId: sessionId,
+      chatType: "main",
+    }).sort({ timestamp: 1 });
     res.json(messages);
   } catch (error) {
     console.error("Get session messages error:", error.message);
@@ -113,69 +176,181 @@ async function deleteSession(req, res) {
 // POST /api/chat/followup
 async function followup(req, res) {
   try {
-    const { selectedText, originalAssistantMessage, userFollowupQuestion, chatSessionId } = req.body;
+    const {
+      selectedText,
+      originalAssistantMessage,
+      userFollowupQuestion,
+      chatSessionId,
+    } = req.body;
     const userId = req.user.id;
     if (!selectedText || !originalAssistantMessage || !userFollowupQuestion) {
-      return res.status(400).json({ message: "Missing required information for follow-up" });
+      return res
+        .status(400)
+        .json({ message: "Missing required information for follow-up" });
     }
     const messageHistory = await Message.find({ userId, chatSessionId })
-      .sort({ timestamp: -1 }).limit(10).sort({ timestamp: 1 });
-    const formattedMessages = messageHistory.map((msg) => ({ role: msg.role === "user" ? "user" : "model", parts: [{ text: msg.content }] }));
-    if (formattedMessages.length === 0 || formattedMessages[0].role !== "model") {
-      formattedMessages.unshift({ role: "model", parts: [{ text: "You are a helpful assistant." }] });
+      .sort({ timestamp: -1 })
+      .limit(10)
+      .sort({ timestamp: 1 });
+    const formattedMessages = messageHistory.map((msg) => ({
+      role: msg.role === "user" ? "user" : "model",
+      parts: [{ text: msg.content }],
+    }));
+    if (
+      formattedMessages.length === 0 ||
+      formattedMessages[0].role !== "model"
+    ) {
+      formattedMessages.unshift({
+        role: "model",
+        parts: [{ text: "You are a helpful assistant." }],
+      });
     }
-    formattedMessages.push({ role: "user", parts: [{ text: `Regarding this part of your previous response: "${selectedText}", ${userFollowupQuestion}` }] });
+    formattedMessages.push({
+      role: "user",
+      parts: [
+        {
+          text: `Regarding this part of your previous response: "${selectedText}", ${userFollowupQuestion}`,
+        },
+      ],
+    });
     const response = await geminiService.callGeminiAPI(formattedMessages);
     const assistantResponse = response.candidates[0].content.parts[0].text;
-    const userMessage = new Message({ userId, chatSessionId, role: "user", content: `Regarding: "${selectedText}" - ${userFollowupQuestion}`, selectedText, fullAssistantMessage: originalAssistantMessage });
+    const userMessage = new Message({
+      userId,
+      chatSessionId,
+      role: "user",
+      content: `Regarding: "${selectedText}" - ${userFollowupQuestion}`,
+      selectedText,
+      fullAssistantMessage: originalAssistantMessage,
+    });
     await userMessage.save();
     await chatUtils.invalidateCachedSummary(userId, chatSessionId);
-    const assistantMessage = new Message({ userId, chatSessionId, role: "assistant", content: assistantResponse || "Sorry, I could not generate a response. Please try again.", replyToMessageId: userMessage._id });
+    const assistantMessage = new Message({
+      userId,
+      chatSessionId,
+      role: "assistant",
+      content:
+        assistantResponse ||
+        "Sorry, I could not generate a response. Please try again.",
+      replyToMessageId: userMessage._id,
+    });
     await assistantMessage.save();
     await chatUtils.invalidateCachedSummary(userId, chatSessionId);
-    res.json({ message: assistantResponse, messageId: assistantMessage._id, chatSessionId });
+    res.json({
+      message: assistantResponse,
+      messageId: assistantMessage._id,
+      chatSessionId,
+    });
   } catch (error) {
     console.error("Follow-up error:", error.message);
     if (error.response) console.error("Gemini API error:", error.response.data);
-    res.status(500).json({ message: "Server error processing follow-up question" });
+    res
+      .status(500)
+      .json({ message: "Server error processing follow-up question" });
   }
 }
 
 // POST /api/chat/side-thread
 async function sideThread(req, res) {
   try {
-    const { mainThreadId, linkedToMessageId, selectedText, userQuery } = req.body;
+    const { mainThreadId, linkedToMessageId, selectedText, userQuery } =
+      req.body;
     const userId = req.user.id;
     if (!mainThreadId || !linkedToMessageId || !selectedText || !userQuery) {
-      return res.status(400).json({ message: "Missing required information for side thread" });
+      return res
+        .status(400)
+        .json({ message: "Missing required information for side thread" });
     }
     const linkedMessage = await Message.findById(linkedToMessageId);
     if (!linkedMessage) {
       return res.status(404).json({ message: "Linked message not found" });
     }
-    const mainThreadMessages = await Message.find({ userId, chatSessionId: mainThreadId, chatType: "main" })
-      .sort({ timestamp: -1 }).limit(10).sort({ timestamp: 1 });
-    const sideThreadMessages = await Message.find({ userId, mainThreadId, linkedToMessageId, chatType: "side", selectedText: selectedText }).sort({ timestamp: 1 });
+    const mainThreadMessages = await Message.find({
+      userId,
+      chatSessionId: mainThreadId,
+      chatType: "main",
+    })
+      .sort({ timestamp: -1 })
+      .limit(10)
+      .sort({ timestamp: 1 });
+    const sideThreadMessages = await Message.find({
+      userId,
+      mainThreadId,
+      linkedToMessageId,
+      chatType: "side",
+      selectedText: selectedText,
+    }).sort({ timestamp: 1 });
     const selectedTextHash = chatUtils.simpleHash(selectedText);
-    const sideThreadId = sideThreadMessages.length > 0 ? sideThreadMessages[0].chatSessionId : `side_${linkedToMessageId}_${selectedTextHash}_${Date.now()}`;
-    const userMessage = new Message({ userId, chatSessionId: sideThreadId, role: "user", content: userQuery, chatType: "side", mainThreadId, linkedToMessageId, selectedText });
+    const sideThreadId =
+      sideThreadMessages.length > 0
+        ? sideThreadMessages[0].chatSessionId
+        : `side_${linkedToMessageId}_${selectedTextHash}_${Date.now()}`;
+    const userMessage = new Message({
+      userId,
+      chatSessionId: sideThreadId,
+      role: "user",
+      content: userQuery,
+      chatType: "side",
+      mainThreadId,
+      linkedToMessageId,
+      selectedText,
+    });
     await userMessage.save();
     await chatUtils.invalidateCachedSummary(userId, mainThreadId);
     const contextMessages = [
-      { role: "model", parts: [{ text: "You are a helpful assistant. The user is asking follow-up questions about a specific part of a previous conversation." }] },
-      ...mainThreadMessages.slice(-5).map((msg) => ({ role: msg.role === "user" ? "user" : "model", parts: [{ text: msg.content }] })),
+      {
+        role: "model",
+        parts: [
+          {
+            text: "You are a helpful assistant. The user is asking follow-up questions about a specific part of a previous conversation.",
+          },
+        ],
+      },
+      ...mainThreadMessages
+        .slice(-5)
+        .map((msg) => ({
+          role: msg.role === "user" ? "user" : "model",
+          parts: [{ text: msg.content }],
+        })),
       { role: "model", parts: [{ text: linkedMessage.content }] },
-      ...sideThreadMessages.map((msg) => ({ role: msg.role === "user" ? "user" : "model", parts: [{ text: msg.content }] })),
-      { role: "user", parts: [{ text: `About this specific part: "${selectedText}"
+      ...sideThreadMessages.map((msg) => ({
+        role: msg.role === "user" ? "user" : "model",
+        parts: [{ text: msg.content }],
+      })),
+      {
+        role: "user",
+        parts: [
+          {
+            text: `About this specific part: "${selectedText}"
 
-${userQuery}` }] },
+${userQuery}`,
+          },
+        ],
+      },
     ];
     const response = await geminiService.callGeminiAPI(contextMessages);
     const assistantResponse = response.candidates[0].content.parts[0].text;
-    const assistantMessage = new Message({ userId, chatSessionId: sideThreadId, role: "assistant", content: assistantResponse || "Sorry, I could not generate a response. Please try again.", chatType: "side", mainThreadId, linkedToMessageId, selectedText, parentMessageId: userMessage._id });
+    const assistantMessage = new Message({
+      userId,
+      chatSessionId: sideThreadId,
+      role: "assistant",
+      content:
+        assistantResponse ||
+        "Sorry, I could not generate a response. Please try again.",
+      chatType: "side",
+      mainThreadId,
+      linkedToMessageId,
+      selectedText,
+      parentMessageId: userMessage._id,
+    });
     await assistantMessage.save();
     await chatUtils.invalidateCachedSummary(userId, mainThreadId);
-    res.json({ message: assistantResponse, messageId: assistantMessage._id, sideThreadId, userMessageId: userMessage._id });
+    res.json({
+      message: assistantResponse,
+      messageId: assistantMessage._id,
+      sideThreadId,
+      userMessageId: userMessage._id,
+    });
   } catch (error) {
     console.error("Side thread error:", error.message);
     if (error.response) console.error("Gemini API error:", error.response.data);
@@ -196,7 +371,11 @@ async function getSideThread(req, res) {
         const hash = chatUtils.simpleHash(msg.selectedText);
         return hash === selectedTextHash;
       });
-      return res.json(filteredMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)));
+      return res.json(
+        filteredMessages.sort(
+          (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+        )
+      );
     }
     const sideMessages = await Message.find(query).sort({ timestamp: 1 });
     res.json(sideMessages);
@@ -211,8 +390,15 @@ async function getSideThreadSelections(req, res) {
   try {
     const userId = req.user.id;
     const { mainThreadId, linkedToMessageId } = req.params;
-    const sideMessages = await Message.find({ userId, mainThreadId, linkedToMessageId, chatType: "side", selectedText: { $ne: null, $ne: "" } })
-      .select("selectedText chatSessionId timestamp").sort({ timestamp: 1 });
+    const sideMessages = await Message.find({
+      userId,
+      mainThreadId,
+      linkedToMessageId,
+      chatType: "side",
+      selectedText: { $ne: null, $ne: "" },
+    })
+      .select("selectedText chatSessionId timestamp")
+      .sort({ timestamp: 1 });
     const uniqueSelections = {};
     sideMessages.forEach((msg) => {
       if (!uniqueSelections[msg.selectedText]) {
@@ -237,7 +423,12 @@ async function getAllSideThreads(req, res) {
   try {
     const userId = req.user.id;
     const { mainThreadId } = req.params;
-    const sideThreads = await Message.distinct("linkedToMessageId", { userId, mainThreadId, chatType: "side", linkedToMessageId: { $ne: null } });
+    const sideThreads = await Message.distinct("linkedToMessageId", {
+      userId,
+      mainThreadId,
+      chatType: "side",
+      linkedToMessageId: { $ne: null },
+    });
     res.json(sideThreads);
   } catch (error) {
     console.error("Get side threads error:", error.message);
@@ -250,17 +441,45 @@ async function getSummary(req, res) {
   try {
     const userId = req.user.id;
     const { sessionId } = req.params;
-    const mainMessages = await Message.find({ userId, chatSessionId: sessionId, chatType: "main" }).sort({ timestamp: 1 });
-    const sideMessages = await Message.find({ userId, mainThreadId: sessionId, chatType: "side" }).sort({ timestamp: 1 });
+    const mainMessages = await Message.find({
+      userId,
+      chatSessionId: sessionId,
+      chatType: "main",
+    }).sort({ timestamp: 1 });
+    const sideMessages = await Message.find({
+      userId,
+      mainThreadId: sessionId,
+      chatType: "side",
+    }).sort({ timestamp: 1 });
     if (mainMessages.length === 0 && sideMessages.length === 0) {
-      return res.status(404).json({ message: "No messages found for this session" });
+      return res
+        .status(404)
+        .json({ message: "No messages found for this session" });
     }
     const allMessages = [...mainMessages, ...sideMessages];
-    const latestMessageTimestamp = allMessages.reduce((latest, msg) => new Date(msg.timestamp) > new Date(latest) ? msg.timestamp : latest, allMessages[0].timestamp);
-    const contentForHash = allMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)).map(msg => `${msg.role}:${msg.content}:${msg.chatType}`).join('|');
-    const contentHash = require("crypto").createHash('sha256').update(contentForHash).digest('hex');
-    const existingSummary = await Summary.findOne({ userId, chatSessionId: sessionId });
-    if (existingSummary && existingSummary.contentHash === contentHash && new Date(existingSummary.lastMessageTimestamp) >= new Date(latestMessageTimestamp)) {
+    const latestMessageTimestamp = allMessages.reduce(
+      (latest, msg) =>
+        new Date(msg.timestamp) > new Date(latest) ? msg.timestamp : latest,
+      allMessages[0].timestamp
+    );
+    const contentForHash = allMessages
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+      .map((msg) => `${msg.role}:${msg.content}:${msg.chatType}`)
+      .join("|");
+    const contentHash = require("crypto")
+      .createHash("sha256")
+      .update(contentForHash)
+      .digest("hex");
+    const existingSummary = await Summary.findOne({
+      userId,
+      chatSessionId: sessionId,
+    });
+    if (
+      existingSummary &&
+      existingSummary.contentHash === contentHash &&
+      new Date(existingSummary.lastMessageTimestamp) >=
+        new Date(latestMessageTimestamp)
+    ) {
       return res.json({
         sessionId,
         summary: existingSummary.summary,
@@ -269,7 +488,7 @@ async function getSummary(req, res) {
         mainThreadsWithSideThreads: existingSummary.mainThreadsWithSideThreads,
         generatedAt: existingSummary.generatedAt.toISOString(),
         rawConversation: existingSummary.rawConversation,
-        cached: true
+        cached: true,
       });
     }
     const sideThreadsMap = new Map();
@@ -280,8 +499,10 @@ async function getSummary(req, res) {
     }
     const finalFormattedMessages = [];
     for (const mainMessage of mainMessages) {
-      if (mainMessage.role === "user") finalFormattedMessages.push(`User: ${mainMessage.content}`);
-      if (mainMessage.role === "assistant") finalFormattedMessages.push(`Assistant: ${mainMessage.content}`);
+      if (mainMessage.role === "user")
+        finalFormattedMessages.push(`User: ${mainMessage.content}`);
+      if (mainMessage.role === "assistant")
+        finalFormattedMessages.push(`Assistant: ${mainMessage.content}`);
       const linkedId = mainMessage._id.toString();
       if (sideThreadsMap.has(linkedId)) {
         const sideThreadMessages = sideThreadsMap.get(linkedId);
@@ -296,12 +517,13 @@ async function getSummary(req, res) {
     let summary;
     let error = null;
     try {
-      const summaryResponse = await geminiService.callGeminiAPI([
-        {
-          role: "user",
-          parts: [
-            {
-              text: `Summarize this chat between a user and an AI assistant. The conversation includes main messages and side threads (follow-up questions indicated by "↳ [Side Thread]" prefix).
+      const summaryResponse = await geminiService.callGeminiAPI(
+        [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `Summarize this chat between a user and an AI assistant. The conversation includes main messages and side threads (follow-up questions indicated by "↳ [Side Thread]" prefix).
 
                   Your task:
                   1. Organize by topic with clear headings (e.g., "1. Topic Name")
@@ -321,14 +543,17 @@ async function getSummary(req, res) {
 
                   Here's the conversation:
                   ${inputToSummarizer}`,
-            },
-          ],
-        },
-      ], { temperature: 0.3, maxOutputTokens: 1000 });
+              },
+            ],
+          },
+        ],
+        { temperature: 0.3, maxOutputTokens: 1000 }
+      );
       summary = summaryResponse.candidates[0].content.parts[0].text;
     } catch (summaryError) {
       console.error("Summary generation error:", summaryError);
-      summary = "Summary generation temporarily unavailable. Here's the formatted conversation:";
+      summary =
+        "Summary generation temporarily unavailable. Here's the formatted conversation:";
       error = "AI summarization failed, showing raw conversation";
     }
     const summaryData = {
@@ -341,7 +566,7 @@ async function getSummary(req, res) {
       rawConversation: inputToSummarizer,
       generatedAt: new Date(),
       lastMessageTimestamp: latestMessageTimestamp,
-      contentHash
+      contentHash,
     };
     try {
       await Summary.findOneAndUpdate(
@@ -360,7 +585,7 @@ async function getSummary(req, res) {
       mainThreadsWithSideThreads: sideThreadsMap.size,
       generatedAt: new Date().toISOString(),
       rawConversation: inputToSummarizer,
-      cached: false
+      cached: false,
     };
     if (error) responseData.error = error;
     res.json(responseData);
