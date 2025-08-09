@@ -51,6 +51,12 @@ const MessageSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    // AI model used for generating the response
+    aiModel: {
+        type: String,
+        enum: ['gemini', 'azure-openai'],
+        default: null // null for user messages
+    },
     // Legacy fields for backward compatibility
     fullAssistantMessage: {
         type: String,

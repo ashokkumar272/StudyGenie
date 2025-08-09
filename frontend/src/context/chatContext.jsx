@@ -12,6 +12,7 @@ export const ChatProvider = ({ children }) => {
   const [chatSessions, setChatSessions] = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [sideThreads, setSideThreads] = useState([]); // Store message IDs that have side threads
+  const [selectedAIModel, setSelectedAIModel] = useState('gemini'); // Default to Gemini
   // Fetch chat history when user is authenticated
   useEffect(() => {
     if (isAuthenticated) {
@@ -182,7 +183,8 @@ export const ChatProvider = ({ children }) => {
         // Send to API
       const res = await api.post('/api/chat', { 
         content, 
-        chatSessionId: sessionId 
+        chatSessionId: sessionId,
+        aiModel: selectedAIModel
       });
       
       if (!res.data || !res.data.message) {
@@ -332,7 +334,8 @@ export const ChatProvider = ({ children }) => {
           selectedText, 
           originalAssistantMessage, 
           userFollowupQuestion,
-          chatSessionId: sessionId 
+          chatSessionId: sessionId,
+          aiModel: selectedAIModel
         });
         
         if (!res.data || !res.data.message) {
@@ -397,7 +400,8 @@ export const ChatProvider = ({ children }) => {
         mainThreadId,
         linkedToMessageId,
         selectedText,
-        userQuery
+        userQuery,
+        aiModel: selectedAIModel
       });
       
       if (!res.data || !res.data.message) {
@@ -444,7 +448,7 @@ export const ChatProvider = ({ children }) => {
   // Clear error
   const clearError = () => {
     setError(null);
-  };return (
+  };  return (
     <ChatContext.Provider
       value={{
         messages,
@@ -453,6 +457,8 @@ export const ChatProvider = ({ children }) => {
         chatSessions,
         currentSessionId,
         sideThreads,
+        selectedAIModel,
+        setSelectedAIModel,
         sendMessage,        sendFollowupQuestion,
         sendSideThreadMessage,
         fetchSideThreadMessages,

@@ -110,7 +110,18 @@ const ChatMessage = ({
         {renderContent()}
 
         <div className={getTimestampClasses()}>
-          {formatTime(message.timestamp)}
+          <div className="flex items-center gap-2">
+            <span>{formatTime(message.timestamp)}</span>
+            {message.role === "assistant" && message.aiModel && (
+              <span className={`text-xs px-1.5 py-0.5 rounded-md font-medium ${
+                message.aiModel === 'azure-openai' 
+                  ? 'bg-blue-100 text-blue-700 border border-blue-200' 
+                  : 'bg-purple-100 text-purple-700 border border-purple-200'
+              }`}>
+                {message.aiModel === 'azure-openai' ? 'GPT-4.1' : 'Gemini'}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { ChatContext } from "../context/chatContext";
 import { FiTrash2, FiFileText } from "react-icons/fi";
 import ChatMessageList from "./ChatMessageList";
 import ChatInput from "./ChatInput";
+import ModelSelector from "./ModelSelector";
 
 const MainChat = React.forwardRef(
   ({ 
@@ -18,6 +19,8 @@ const MainChat = React.forwardRef(
       loading,
       sendMessage,
       currentSessionId,
+      selectedAIModel,
+      setSelectedAIModel,
     } = useContext(ChatContext);
 
     const [newMessage, setNewMessage] = useState("");
@@ -135,6 +138,12 @@ const MainChat = React.forwardRef(
             >
               <FiFileText size={20} />
             </button>
+
+            <ModelSelector
+              selectedModel={selectedAIModel}
+              onModelChange={setSelectedAIModel}
+              className="flex-shrink-0"
+            />
 
             <ChatInput
               value={newMessage}

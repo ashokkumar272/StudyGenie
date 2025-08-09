@@ -5,15 +5,22 @@ const mongoose = require("mongoose");
 const chatUtils = require("./chatUtils");
 require('dotenv').config();
 const geminiService = require("./geminiService");
+const azureOpenAIService = require("./azureOpenAIService");
 
 // POST /api/chat
 async function sendMessage(req, res) {
   try {
-    const { content, chatSessionId } = req.body;
+    const { content, chatSessionId, aiModel = 'gemini' } = req.body;
     const userId = req.user.id;
     if (!content || content.trim() === "") {
       return res.status(400).json({ message: "Message content is required" });
     }
+    
+    // Validate AI model
+    if (!['gemini', 'azure-openai'].includes(aiModel)) {
+      return res.status(400).json({ message: "Invalid AI model selected" });
+    }
+    
     const sessionId = chatSessionId || Date.now().toString();
     const userMessage = new Message({
       userId,
@@ -21,6 +28,7 @@ async function sendMessage(req, res) {
       role: "user",
       content,
       chatType: "main",
+      aiModel: null, // User messages don't have an AI model
     });
     await userMessage.save();
     await chatUtils.invalidateCachedSummary(userId, sessionId);
@@ -45,8 +53,19 @@ async function sendMessage(req, res) {
         parts: [{ text: "You are a helpful assistant." }],
       });
     }
-    const response = await geminiService.callGeminiAPI(formattedMessages);
-    const assistantResponse = response.candidates[0].content.parts[0].text;
+
+    let response;
+    let assistantResponse;
+
+    // Choose AI service based on selected model
+    if (aiModel === 'azure-openai') {
+      response = await azureOpenAIService.callAzureOpenAI(formattedMessages);
+      assistantResponse = response.candidates[0].content.parts[0].text;
+    } else {
+      response = await geminiService.callGeminiAPI(formattedMessages);
+      assistantResponse = response.candidates[0].content.parts[0].text;
+    }
+
     const assistantMessage = new Message({
       userId,
       chatSessionId: sessionId,
@@ -55,6 +74,7 @@ async function sendMessage(req, res) {
         assistantResponse ||
         "Sorry, I could not generate a response. Please try again.",
       chatType: "main",
+      aiModel: aiModel, // Store which AI model was used
     });
     await assistantMessage.save();
     await chatUtils.invalidateCachedSummary(userId, sessionId);
@@ -62,10 +82,11 @@ async function sendMessage(req, res) {
       message: assistantResponse,
       messageId: assistantMessage._id,
       chatSessionId: sessionId,
+      aiModel: aiModel,
     });
   } catch (error) {
     console.error("Chat error:", error.message);
-    if (error.response) console.error("Gemini API error:", error.response.data);
+    if (error.response) console.error("AI API error:", error.response.data);
     try {
       const errorMessage = new Message({
         userId: req.user.id,
@@ -74,12 +95,14 @@ async function sendMessage(req, res) {
         content:
           "Sorry, I encountered an error processing your request. Please try again.",
         chatType: "main",
+        aiModel: req.body.aiModel || 'gemini',
       });
       await errorMessage.save();
       res.json({
         message: errorMessage.content,
         messageId: errorMessage._id,
         chatSessionId: errorMessage.chatSessionId,
+        aiModel: errorMessage.aiModel,
       });
     } catch (fallbackError) {
       console.error("Fallback error response failed:", fallbackError);
@@ -181,6 +204,7 @@ async function followup(req, res) {
       originalAssistantMessage,
       userFollowupQuestion,
       chatSessionId,
+      aiModel = 'gemini'
     } = req.body;
     const userId = req.user.id;
     if (!selectedText || !originalAssistantMessage || !userFollowupQuestion) {
@@ -188,6 +212,12 @@ async function followup(req, res) {
         .status(400)
         .json({ message: "Missing required information for follow-up" });
     }
+    
+    // Validate AI model
+    if (!['gemini', 'azure-openai'].includes(aiModel)) {
+      return res.status(400).json({ message: "Invalid AI model selected" });
+    }
+    
     const messageHistory = await Message.find({ userId, chatSessionId })
       .sort({ timestamp: -1 })
       .limit(10)
@@ -213,8 +243,19 @@ async function followup(req, res) {
         },
       ],
     });
-    const response = await geminiService.callGeminiAPI(formattedMessages);
-    const assistantResponse = response.candidates[0].content.parts[0].text;
+
+    let response;
+    let assistantResponse;
+
+    // Choose AI service based on selected model
+    if (aiModel === 'azure-openai') {
+      response = await azureOpenAIService.callAzureOpenAI(formattedMessages);
+      assistantResponse = response.candidates[0].content.parts[0].text;
+    } else {
+      response = await geminiService.callGeminiAPI(formattedMessages);
+      assistantResponse = response.candidates[0].content.parts[0].text;
+    }
+
     const userMessage = new Message({
       userId,
       chatSessionId,
@@ -222,6 +263,7 @@ async function followup(req, res) {
       content: `Regarding: "${selectedText}" - ${userFollowupQuestion}`,
       selectedText,
       fullAssistantMessage: originalAssistantMessage,
+      aiModel: null, // User messages don't have an AI model
     });
     await userMessage.save();
     await chatUtils.invalidateCachedSummary(userId, chatSessionId);
@@ -233,6 +275,7 @@ async function followup(req, res) {
         assistantResponse ||
         "Sorry, I could not generate a response. Please try again.",
       replyToMessageId: userMessage._id,
+      aiModel: aiModel,
     });
     await assistantMessage.save();
     await chatUtils.invalidateCachedSummary(userId, chatSessionId);
@@ -240,10 +283,11 @@ async function followup(req, res) {
       message: assistantResponse,
       messageId: assistantMessage._id,
       chatSessionId,
+      aiModel: aiModel,
     });
   } catch (error) {
     console.error("Follow-up error:", error.message);
-    if (error.response) console.error("Gemini API error:", error.response.data);
+    if (error.response) console.error("AI API error:", error.response.data);
     res
       .status(500)
       .json({ message: "Server error processing follow-up question" });
@@ -253,14 +297,25 @@ async function followup(req, res) {
 // POST /api/chat/side-thread
 async function sideThread(req, res) {
   try {
-    const { mainThreadId, linkedToMessageId, selectedText, userQuery } =
-      req.body;
+    const { 
+      mainThreadId, 
+      linkedToMessageId, 
+      selectedText, 
+      userQuery,
+      aiModel = 'gemini'
+    } = req.body;
     const userId = req.user.id;
     if (!mainThreadId || !linkedToMessageId || !selectedText || !userQuery) {
       return res
         .status(400)
         .json({ message: "Missing required information for side thread" });
     }
+    
+    // Validate AI model
+    if (!['gemini', 'azure-openai'].includes(aiModel)) {
+      return res.status(400).json({ message: "Invalid AI model selected" });
+    }
+    
     const linkedMessage = await Message.findById(linkedToMessageId);
     if (!linkedMessage) {
       return res.status(404).json({ message: "Linked message not found" });
@@ -294,6 +349,7 @@ async function sideThread(req, res) {
       mainThreadId,
       linkedToMessageId,
       selectedText,
+      aiModel: null, // User messages don't have an AI model
     });
     await userMessage.save();
     await chatUtils.invalidateCachedSummary(userId, mainThreadId);
@@ -328,8 +384,19 @@ ${userQuery}`,
         ],
       },
     ];
-    const response = await geminiService.callGeminiAPI(contextMessages);
-    const assistantResponse = response.candidates[0].content.parts[0].text;
+
+    let response;
+    let assistantResponse;
+
+    // Choose AI service based on selected model
+    if (aiModel === 'azure-openai') {
+      response = await azureOpenAIService.callAzureOpenAI(contextMessages);
+      assistantResponse = response.candidates[0].content.parts[0].text;
+    } else {
+      response = await geminiService.callGeminiAPI(contextMessages);
+      assistantResponse = response.candidates[0].content.parts[0].text;
+    }
+
     const assistantMessage = new Message({
       userId,
       chatSessionId: sideThreadId,
@@ -342,6 +409,7 @@ ${userQuery}`,
       linkedToMessageId,
       selectedText,
       parentMessageId: userMessage._id,
+      aiModel: aiModel,
     });
     await assistantMessage.save();
     await chatUtils.invalidateCachedSummary(userId, mainThreadId);
@@ -350,10 +418,11 @@ ${userQuery}`,
       messageId: assistantMessage._id,
       sideThreadId,
       userMessageId: userMessage._id,
+      aiModel: aiModel,
     });
   } catch (error) {
     console.error("Side thread error:", error.message);
-    if (error.response) console.error("Gemini API error:", error.response.data);
+    if (error.response) console.error("AI API error:", error.response.data);
     res.status(500).json({ message: "Server error processing side thread" });
   }
 }
